@@ -7,20 +7,16 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
-
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @Entity
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Option {
 
     @Id
@@ -29,10 +25,9 @@ public class Option {
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
-    private Question question; // 关联的题目
+    private Question question; // 选项属于一个问题
 
     @Column(nullable = false)
     private String content; // 选项内容
-
-    // 其他字段可根据需要添加
 }
+

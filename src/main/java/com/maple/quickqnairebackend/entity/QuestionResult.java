@@ -1,14 +1,14 @@
 package com.maple.quickqnairebackend.entity;
 
 /**
- * Created by zong chang on 2024/11/29 16:53
+ * Created by zong chang on 2024/11/30 15:40
  *
  * @author : Maple-se
  * @version : 1.0
  * @description :
  */
+
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -18,23 +18,22 @@ import javax.persistence.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class UserAnswer {
+public class QuestionResult {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;  // 唯一标识
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user; // 关联的用户
+    @JoinColumn(name = "survey_result_id", nullable = false)
+    private SurveyResult surveyResult;  // 关联的 SurveyResult
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
-    private Question question; // 关联的题目
+    private Question question;  // 关联的 Question
 
     @Column(nullable = false)
-    private String answer; // 用户的回答
+    private String answer;  // 问题的答案，类型可以根据需要调整
 
-    // 其他字段可根据需要添加
 }
+
