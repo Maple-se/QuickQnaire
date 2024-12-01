@@ -8,10 +8,16 @@ package com.maple.quickqnairebackend.repository;
  * @description :
  */
 import com.maple.quickqnairebackend.entity.Survey;
+import com.maple.quickqnairebackend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface SurveyRepository extends JpaRepository<Survey, Long> {
-    // 可以在这里添加自定义查询方法
+    List<Survey> findByStatus(Survey.SurveyStatus status);  // 根据状态查找问卷
+
+    // 根据用户查找该用户创建的所有问卷
+    List<Survey> findByCreatedBy(User createdBy);
 }

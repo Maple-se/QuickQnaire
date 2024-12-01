@@ -10,6 +10,7 @@ package com.maple.quickqnairebackend.entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Calendar;
@@ -27,9 +28,11 @@ public class Survey {
     private Long id;
 
     @Column(nullable = false, length = 255)
+    @Setter
     private String title;
 
     @Column(columnDefinition = "TEXT")
+    @Setter
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -38,6 +41,7 @@ public class Survey {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
+    @Setter
     private User createdBy;
 
     @Column(nullable = false, updatable = false)
@@ -48,8 +52,12 @@ public class Survey {
 
     private Date activeStartDate;  // 问卷被管理员批准并发布的时间（`ACTIVE` 状态开始时间）
 
+    @Setter
     private Integer duration;  // 系统默认持续时间（单位：小时）
+
+    @Setter
     private Integer userSetDuration;  // 用户自定义持续时间（单位：小时）
+    @Setter
     private Integer maxResponses;  // 最大回答数
 
     @Column(nullable = false)
@@ -63,6 +71,7 @@ public class Survey {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Setter
     private AccessLevel accessLevel; // Survey实体中添加访问控制级别字段
 
     public enum AccessLevel {
@@ -91,12 +100,32 @@ public class Survey {
         this.updatedAt = new Date();  // 每次更新时都会设置更新时间
     }
 
+    // 自定义方法：用户创建问卷
+    public void creat() {
+        this.status = SurveyStatus.DRAFT;
+    }
+
+
+    // 自定义方法：用户提交问卷给管理员审核，问卷状态变更
+    public void submit() {
+        if (this.status == SurveyStatus.DRAFT) {
+            this.status = SurveyStatus.PENDING_APPROVAL;
+        }
+    }
+
 
     // 自定义方法：批准并发布问卷
     public void approve() {
         if (this.status == SurveyStatus.PENDING_APPROVAL) {
             this.status = SurveyStatus.ACTIVE;
             this.activeStartDate = new Date();  // 设置问卷被批准后的开始时间
+        }
+    }
+
+    // 自定义方法：拒绝问卷
+    public void reject() {
+        if (this.status == SurveyStatus.PENDING_APPROVAL) {
+            this.status = SurveyStatus.DRAFT;  // 如果被拒绝，设置状态为草稿
         }
     }
 
@@ -108,9 +137,9 @@ public class Survey {
     }
 
     // 自定义方法：检查问卷是否已经结束
-    public void checkSurveyEnd() {
+    public boolean checkSurveyEnd() {
         if (this.status == SurveyStatus.CLOSED) {
-            return;
+            return true;
         }
 
         // 1. 用户手动关闭问卷（优先级最高）
@@ -142,7 +171,7 @@ public class Survey {
             Date systemDefaultEnd = calendar.getTime();
             if (new Date().after(systemDefaultEnd)) {
                 close();  // 达到系统默认的持续时间，关闭问卷
-                return;
+                return true;
             }
         }
 
@@ -150,6 +179,7 @@ public class Survey {
         if (shouldClose) {
             promptUserToCloseSurvey();
         }
+        return false;
     }
 
     // 检查用户设置的持续时间是否已过
@@ -173,8 +203,8 @@ public class Survey {
         // 例如： "问卷已经满足条件，是否关闭问卷？"
     }
     // 强制关闭问卷（管理员权限）
-    public void forceClose() {
-        close();  // 管理员强制关闭问卷
-    }
+//    public void forceClose() {
+//        close();  // 管理员强制关闭问卷
+//    }
 }
 

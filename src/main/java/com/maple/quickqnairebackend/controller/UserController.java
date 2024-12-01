@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -41,7 +41,7 @@ public class UserController {
     public ResponseEntity<String> registerUser(@Valid @RequestBody User newUser) {
         try {
             // 调用服务层创建用户
-            User createdUser = userService.createUser(newUser);
+            userService.createUser(newUser);
             return ResponseEntity.status(HttpStatus.CREATED).body("用户注册成功");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());  // 返回错误消息
@@ -50,19 +50,21 @@ public class UserController {
 
     // 登录接口：用户登录
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             // 使用 AuthenticationManager 进行身份验证
             Authentication authentication = authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
 
+            User user = userService.getUserByUsername(loginRequest.getUsername());
+
             // 生成 JWT Token
-            String token = JwtTokenUtil.generateToken(authentication);
+            String token = JwtTokenUtil.generateToken(user);
 
             // 返回包含 token 和用户角色的响应
-            return ResponseEntity.ok(new LoginResponse(token, "登录成功"));
+            return ResponseEntity.ok(new LoginResponse(token, "login successfully"));
 
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
 

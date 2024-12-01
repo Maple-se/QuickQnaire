@@ -29,7 +29,7 @@ public class UserService {
 
     // 创建用户
     @Transactional  // 添加事务注解，保证操作的原子性
-    public User createUser(User user) {
+    public void createUser(User user) {
         // 在服务层进行唯一性检查
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("用户名已存在");
@@ -44,19 +44,23 @@ public class UserService {
         user.setPassword(encodedPassword);
 
         // 保存用户
-        return userRepository.save(user);
+        try{
+            userRepository.save(user);
+        }catch (Exception e){
+            throw new IllegalArgumentException(e.getMessage() +" 用户创建失败");
+        }
     }
 
     // 根据用户名查找用户
     public User getUserByUsername(String username) {
         Optional<User> optionalUser = userRepository.findByUsername(username);
-        return optionalUser.orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+        return optionalUser.orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     // 根据ID查找用户
     public User getUserById(Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
-        return optionalUser.orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+        return optionalUser.orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
 
@@ -101,7 +105,7 @@ public class UserService {
     public User updateUser(Long userId, String newUsername, String newEmail, String newPassword) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (!optionalUser.isPresent()) {
-            throw new IllegalArgumentException("用户不存在");
+            throw new IllegalArgumentException("User not found");
         }
 
         User user = optionalUser.get();
@@ -121,7 +125,7 @@ public class UserService {
     public void deleteUser(Long userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (!optionalUser.isPresent()) {
-            throw new IllegalArgumentException("用户不存在");
+            throw new IllegalArgumentException("User not found");
         }
         userRepository.deleteById(userId);
     }
