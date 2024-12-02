@@ -10,6 +10,7 @@ package com.maple.quickqnairebackend.entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -17,17 +18,24 @@ import javax.persistence.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Option {
+public class QuestionOption {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
     private Question question; // 选项属于一个问题
 
+    @Setter
     @Column(nullable = false)
     private String content; // 选项内容
+
+    @Override
+    public String toString() {
+        return "Option{id=" + id + ", content='" + content + "'}";
+    }
 }
 

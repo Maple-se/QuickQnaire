@@ -60,12 +60,19 @@ public class Survey {
     @Setter
     private Integer maxResponses;  // 最大回答数
 
+    @Setter
     @Column(nullable = false)
     private Integer responsesReceived = 0;  // 已收到的回答数
 
+    /*
+    * FetchType.LAZY
+    * 推荐的方法是使用 LAZY 加载，因为 EAGER 加载可能会导致性能问题
+    * */
+    @Setter
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Question> questions; // 每个问卷包含多个问题
 
+    @Setter
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SurveyResult> surveyResults;  // 一个 Survey 有多个 SurveyResult
 
@@ -101,7 +108,7 @@ public class Survey {
     }
 
     // 自定义方法：用户创建问卷
-    public void creat() {
+    public void create() {
         this.status = SurveyStatus.DRAFT;
     }
 

@@ -1,5 +1,10 @@
 package com.maple.quickqnairebackend.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 /**
  * Created by zong chang on 2024/11/30 22:04
  *
@@ -7,29 +12,12 @@ package com.maple.quickqnairebackend.dto;
  * @version : 1.0
  * @description :
  */
+
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponse {
     private String token;
     private String message;
-
-    public LoginResponse(String token, String message) {
-        this.token = token;
-        this.message = message;
-    }
-
-    // Getters and Setters
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

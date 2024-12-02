@@ -10,6 +10,7 @@ package com.maple.quickqnairebackend.entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.List;
@@ -24,17 +25,21 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "survey_id", nullable = false)
     private Survey survey; // 每个问题属于一个问卷
 
+    @Setter
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content; // 问题内容
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private QuestionType type; // 问题类型（单选、多选、文本）
 
+    @Setter
     @Column(nullable = false)
     private Boolean required; // 是否为必答问题
 
@@ -44,18 +49,27 @@ public class Question {
 //    @Column(nullable = false)
 //    private Date updatedAt;
 
+    @Setter
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Option> options; // 一个问题有多个选项
+    private List<QuestionOption> options; // 一个问题有多个选项
 
 //    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    private List<Answer> answers; // 一个问题有多个回答记录
 
+    @Setter
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<QuestionResult> questionResults;  // 该问题对应的所有回答
 
 
     public enum QuestionType {
         SINGLE_CHOICE, MULTIPLE_CHOICE, TEXT
+    }
+
+
+    @Override
+    public String toString() {
+        // 输出问题内容和选项列表
+        return "Question{id=" + id + ", content='" + content + "', options=" + options + "}";
     }
 
 

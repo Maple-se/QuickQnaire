@@ -7,11 +7,13 @@ package com.maple.quickqnairebackend.repository;
  * @version : 1.0
  * @description :
  */
-import com.maple.quickqnairebackend.entity.Option;
+import com.maple.quickqnairebackend.entity.QuestionOption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
-public interface OptionRepository extends JpaRepository<Option, Long> {
-    // 可以在这里添加自定义查询方法
+public interface OptionRepository extends JpaRepository<QuestionOption, Long> {
+    List<QuestionOption> findByQuestionId(Long questionId);
 }

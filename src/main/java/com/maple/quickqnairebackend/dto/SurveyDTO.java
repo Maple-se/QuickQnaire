@@ -10,13 +10,19 @@ import com.maple.quickqnairebackend.entity.Survey;
  * @description :
  */
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 //ToDo:SurveyDTO有待进一步完善
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class SurveyDTO {
     private Long id;
     private String title;
-    private Survey.SurveyStatus status;
+    private String description;
+    private Survey.SurveyStatus status;//问卷状态字段
+    private String message; // 操作成功或失败的消息
 }

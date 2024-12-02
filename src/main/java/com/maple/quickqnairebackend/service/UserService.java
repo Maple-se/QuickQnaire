@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,12 @@ public class UserService {
             throw new IllegalArgumentException("邮箱已存在");
         }
 
+        // 密码校验
+        // 通过正则表达式来验证密码格式
+        if (!isValidPassword(user.getPassword())) {
+            throw new IllegalArgumentException("密码必须包含字母和数字，且长度至少为6个字符");
+        }
+
         // 密码加密
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
@@ -49,6 +56,11 @@ public class UserService {
         }catch (Exception e){
             throw new IllegalArgumentException(e.getMessage() +" 用户创建失败");
         }
+    }
+
+    //用户名是否存在
+    public boolean IsUserNameExist(String username){
+        return userRepository.existsByUsername(username);
     }
 
     // 根据用户名查找用户
@@ -92,6 +104,7 @@ public class UserService {
     }
 
     // 更新密码
+    //ToDo:密码更新方法有待检查
     public void updatePassword(User user, String newPassword) {
         // 如果提供了新的密码
         if (!newPassword.isEmpty()) {
@@ -131,8 +144,15 @@ public class UserService {
     }
 
     // 获取所有用户
-    public Iterable<User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    // 密码格式校验方法
+    //正则表达式匹配
+    //密码必须包含字母和数字，且长度至少为6个字符
+    private boolean isValidPassword(String password) {
+        return password != null && password.matches("^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,}$");
     }
 }
 

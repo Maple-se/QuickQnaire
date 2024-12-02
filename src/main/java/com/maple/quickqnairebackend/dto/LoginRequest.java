@@ -14,7 +14,6 @@ import javax.validation.constraints.NotNull;
  * @version : 1.0
  * @description :
  */
-@Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

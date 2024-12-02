@@ -37,7 +37,7 @@ public class User {
 
     @Column(nullable = false)
     @NotNull(message = "密码不能为空")
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,}$", message = "密码必须包含字母和数字，且长度至少为6个字符")
+    //@Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,}$", message = "密码必须包含字母和数字，且长度至少为6个字符")
     @Setter
     private String password;
 

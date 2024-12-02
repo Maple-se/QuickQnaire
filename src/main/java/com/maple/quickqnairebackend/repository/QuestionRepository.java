@@ -11,7 +11,9 @@ import com.maple.quickqnairebackend.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
-    // 可以在这里添加自定义查询方法
+    List<Question> findBySurveyId(Long surveyId);
 }
