@@ -48,7 +48,7 @@ public class QuestionService {
         Optional<Question> questionOptional = questionRepository.findById(questionId);
         if (questionOptional.isPresent()) {
             Question question = questionOptional.get();
-            question.setContent(updatedQuestion.getContent());
+            question.setQuestionContent(updatedQuestion.getQuestionContent());
             question.setType(updatedQuestion.getType());
             question.setRequired(updatedQuestion.getRequired());
             question.setOptions(updatedQuestion.getOptions());  // 更新选项

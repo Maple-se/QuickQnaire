@@ -7,7 +7,7 @@ package com.maple.quickqnairebackend;
  * @version : 1.0
  * @description :
  */
-import com.maple.quickqnairebackend.dto.SurveyDTO;
+import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
 import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
@@ -22,9 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -148,7 +146,7 @@ public class SurveyServiceTest {
         //survey.setCreatedBy(adminUser);
 
         // 保存问卷
-        SurveyDTO createdSurvey = surveyService.createSurvey(survey, adminUser.getId());
+        SurveySimpleInfoDTO createdSurvey = surveyService.createSurvey(survey, adminUser.getId());
 
         // 创建三个问题
         createQuestion(createdSurvey, "What is your favorite color?", Question.QuestionType.SINGLE_CHOICE);
@@ -164,10 +162,10 @@ public class SurveyServiceTest {
         System.out.println("Survey Title: " + queriedSurvey.getTitle());
     }
 
-    private void createQuestion(SurveyDTO survey, String content, Question.QuestionType type) {
+    private void createQuestion(SurveySimpleInfoDTO survey, String content, Question.QuestionType type) {
         Question question = new Question();
         //question.setSurvey(survey);
-        question.setContent(content);
+        question.setQuestionContent(content);
         question.setType(type);
         question.setRequired(true); // 假设所有问题都是必答的
 
@@ -185,19 +183,19 @@ public class SurveyServiceTest {
     private void createOptionsForQuestion(Question question) {
         QuestionOption option1 = new QuestionOption();
         //option1.setQuestion(question);
-        option1.setContent("Option 1");
+        option1.setOptionContent("Option 1");
         optionService.createOption(question.getId(), option1);
         //questionOptions.add(o1);
 
         QuestionOption option2 = new QuestionOption();
         //option2.setQuestion(question);
-        option2.setContent("Option 2");
+        option2.setOptionContent("Option 2");
         optionService.createOption(question.getId(),option2);
         //questionOptions.add(o2);
 
         QuestionOption option3 = new QuestionOption();
         //option3.setQuestion(question);
-        option3.setContent("Option 3");
+        option3.setOptionContent("Option 3");
         optionService.createOption(question.getId(),option3);
         //questionOptions.add(o3);
     }

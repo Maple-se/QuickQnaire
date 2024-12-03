@@ -1,18 +1,15 @@
 package com.maple.quickqnairebackend.util;
 
 import com.maple.quickqnairebackend.entity.User;
-import io.jsonwebtoken.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -88,18 +85,11 @@ public class JwtTokenUtil {
     // 验证 Token 是否有效
     public static boolean validateToken(String token) {
         try {
-            // 解析并验证 Token
-            Jwts.parser()
-                    .verifyWith(KEY)  // 验证签名密钥
-                    .build()
-                    .parseSignedClaims(token);// 解析 Token;
-            return true;  // 如果没有异常，则 Token 有效
+            return !parsePayload(token).getExpiration().before(new Date());
         } catch (Exception e) {
-            // 如果发生异常，表示 Token 无效（例如过期或签名错误）
             return false;
         }
     }
-
     /**
      * 解析token
      * @param token token

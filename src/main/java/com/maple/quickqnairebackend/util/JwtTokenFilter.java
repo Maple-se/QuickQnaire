@@ -31,12 +31,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = getTokenFromRequest(request);
 
         if (token != null && JwtTokenUtil.validateToken(token)) {  // 直接调用 JwtTokenUtil 静态方法
-            Long userId = JwtTokenUtil.extractUserId(token);
+            //Long userId = JwtTokenUtil.extractUserId(token);
             String role = JwtTokenUtil.extractRole(token);
 
             // 设置认证信息，加入角色信息
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userId, null, AuthorityUtils.createAuthorityList(role));
+                    JwtTokenUtil.parsePayload(token).getSubject(), null, AuthorityUtils.createAuthorityList(role));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

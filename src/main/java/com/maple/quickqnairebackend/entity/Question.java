@@ -7,6 +7,8 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,11 +30,12 @@ public class Question {
     @Setter
     @ManyToOne
     @JoinColumn(name = "survey_id", nullable = false)
+    @JsonBackReference  // 使 Question -> Survey 的反向引用被忽略
     private Survey survey; // 每个问题属于一个问卷
 
     @Setter
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content; // 问题内容
+    private String questionContent; // 问题内容
 
     @Setter
     @Enumerated(EnumType.STRING)
@@ -51,6 +54,7 @@ public class Question {
 
     @Setter
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference  // 使 Question -> Option 的序列化正常进行
     private List<QuestionOption> options; // 一个问题有多个选项
 
 //    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -58,6 +62,7 @@ public class Question {
 
     @Setter
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<QuestionResult> questionResults;  // 该问题对应的所有回答
 
 
@@ -69,7 +74,7 @@ public class Question {
     @Override
     public String toString() {
         // 输出问题内容和选项列表
-        return "Question{id=" + id + ", content='" + content + "', options=" + options + "}";
+        return "Question{id=" + id + ", content='" + questionContent + "', options=" + options + "}";
     }
 
 

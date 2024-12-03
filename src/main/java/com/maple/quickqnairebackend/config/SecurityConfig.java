@@ -8,7 +8,9 @@ package com.maple.quickqnairebackend.config;
  * @description :
  */
 
+import com.maple.quickqnairebackend.service.CustomUserDetailsService;
 import com.maple.quickqnairebackend.util.JwtTokenFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +18,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -24,11 +27,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    private CustomUserDetailsService userDetailsService;  // 自动注入自定义的 UserDetailsService
+
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/register", "/login").permitAll()  // 注册和登录接口无需认证
+                .antMatchers("/quickqnaire/login", "/quickqnaire/register").permitAll()  // 注册和登录接口无需认证
+                .antMatchers("/quickqnaire/public-survey/**").permitAll()  // 让所有 /quickqnaire/** 路径的请求都不需要认证
                 .antMatchers("/admin/**").hasRole("ADMIN")  // 只有管理员可以访问 /admin/** 路径
                 .antMatchers("/user/**").hasRole("USER")  // 只有普通用户可以访问 /user/** 路径
                 .anyRequest().authenticated()  // 其他接口需要认证
@@ -39,7 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         // 设置 AuthenticationManager 来验证用户
-        auth.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 
     @Override

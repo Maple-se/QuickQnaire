@@ -48,7 +48,7 @@ public class OptionService {
         Optional<QuestionOption> optionOptional = optionRepository.findById(optionId);
         if (optionOptional.isPresent()) {
             QuestionOption option = optionOptional.get();
-            option.setContent(updatedOption.getContent());  // 更新选项内容
+            option.setOptionContent(updatedOption.getOptionContent());  // 更新选项内容
             return optionRepository.save(option);
         } else {
             throw new IllegalArgumentException("Option not found with id " + optionId);

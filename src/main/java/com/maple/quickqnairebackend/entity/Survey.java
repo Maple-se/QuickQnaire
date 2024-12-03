@@ -7,6 +7,9 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -42,6 +45,7 @@ public class Survey {
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
     @Setter
+    @JsonBackReference
     private User createdBy;
 
     @Column(nullable = false, updatable = false)
@@ -58,7 +62,7 @@ public class Survey {
     @Setter
     private Integer userSetDuration;  // 用户自定义持续时间（单位：小时）
     @Setter
-    private Integer maxResponses;  // 最大回答数
+    private Integer maxResponses;  // 用户自定义最大回答数
 
     @Setter
     @Column(nullable = false)
@@ -70,10 +74,12 @@ public class Survey {
     * */
     @Setter
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Question> questions; // 每个问卷包含多个问题
 
     @Setter
     @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference// 使 Survey -> Question 的序列化正常进行
     private List<SurveyResult> surveyResults;  // 一个 Survey 有多个 SurveyResult
 
     @Enumerated(EnumType.STRING)
@@ -143,72 +149,21 @@ public class Survey {
         }
     }
 
-    // 自定义方法：检查问卷是否已经结束
-    public boolean checkSurveyEnd() {
-        if (this.status == SurveyStatus.CLOSED) {
-            return true;
-        }
-
-        // 1. 用户手动关闭问卷（优先级最高）
-//        if (this.status == SurveyStatus.PENDING_APPROVAL || this.status == SurveyStatus.ACTIVE) {
-//            if (isUserSetDurationExpired()) {
-//                close();  // 用户自定义结束时间，关闭问卷
-//                return;
-//            }
-//        }
-
-        boolean shouldClose = false;
-
-        // 1. 达到最大回答数
-        if (this.maxResponses != null && this.responsesReceived >= this.maxResponses) {
-            shouldClose = true;  // 满足最大回答数条件
-        }
-
-        // 2. 达到用户设置的持续时间
-        if (this.userSetDuration != null && isUserSetDurationExpired()) {
-            shouldClose = true;  // 满足用户设置持续时间条件
-        }
-
-
-        // 4. 达到系统默认的持续时间
-        if (this.duration != null && this.activeStartDate != null) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(this.activeStartDate);  // 从`ACTIVE`开始时间计算
-            calendar.add(Calendar.HOUR, this.duration);
-            Date systemDefaultEnd = calendar.getTime();
-            if (new Date().after(systemDefaultEnd)) {
-                close();  // 达到系统默认的持续时间，关闭问卷
-                return true;
-            }
-        }
-
-        // 如果满足任何一个条件，提示用户是否关闭问卷
-        if (shouldClose) {
-            promptUserToCloseSurvey();
-        }
-        return false;
-    }
 
     // 检查用户设置的持续时间是否已过
-    private boolean isUserSetDurationExpired() {
-        if (this.userSetDuration == null || this.status != SurveyStatus.ACTIVE || this.activeStartDate == null) {
-            return false;
-        }
+//    private boolean isUserSetDurationExpired() {
+//        if (this.userSetDuration == null || this.status != SurveyStatus.ACTIVE || this.activeStartDate == null) {
+//            return false;
+//        }
+//
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.setTime(this.activeStartDate);  // 从`ACTIVE`开始时间计算
+//        calendar.add(Calendar.HOUR, this.userSetDuration);  // 增加用户设置的小时数
+//        Date userSetEnd = calendar.getTime();
+//
+//        return new Date().after(userSetEnd);  // 如果当前时间已超过结束时间，则返回 true
+//    }
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(this.activeStartDate);  // 从`ACTIVE`开始时间计算
-        calendar.add(Calendar.HOUR, this.userSetDuration);  // 增加用户设置的小时数
-        Date userSetEnd = calendar.getTime();
-
-        return new Date().after(userSetEnd);  // 如果当前时间已超过结束时间，则返回 true
-    }
-
-
-    private void promptUserToCloseSurvey() {
-        // 这里返回给前端提示，用户可以选择关闭问卷
-        // 可以考虑返回一个提示消息，等待用户确认是否关闭
-        // 例如： "问卷已经满足条件，是否关闭问卷？"
-    }
     // 强制关闭问卷（管理员权限）
 //    public void forceClose() {
 //        close();  // 管理员强制关闭问卷

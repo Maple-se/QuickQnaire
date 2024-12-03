@@ -7,6 +7,7 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,27 +31,20 @@ public class User {
     private Long id;
 
     @Column(nullable = false, length = 50, unique = true)
-    @NotNull(message = "用户名不能为空")
-    @Size(min = 3, max = 50, message = "用户名长度必须在3到50之间")
     @Setter
     private String username;
 
     @Column(nullable = false)
-    @NotNull(message = "密码不能为空")
-    //@Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z\\d]{6,}$", message = "密码必须包含字母和数字，且长度至少为6个字符")
     @Setter
     private String password;
 
-    @Column(length = 100, unique = true)
-    @NotNull(message = "邮箱不能为空")
-    @Email(message = "邮箱格式不正确")
+    @Column(length = 100, unique = true,nullable = false)
     @Setter
     private String email;
 
     // 用户角色不能为空，只能是 ADMIN 或 USER
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull(message = "角色不能为空")
     @Setter
     private Role role;
 
@@ -64,9 +58,11 @@ public class User {
 //    private List<Answer> answers; // 一个用户有多个回答记录
 //
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<SurveyResult> surveyResults;  // 一个用户可以填写多个Survey
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<Survey> surveys;//一个用户可以创建多个Survey
 
     public enum Role {

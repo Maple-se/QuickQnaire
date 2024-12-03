@@ -8,6 +8,7 @@ package com.maple.quickqnairebackend.entity;
  * @description :
  */
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,10 +27,12 @@ public class QuestionResult {
 
     @ManyToOne
     @JoinColumn(name = "survey_result_id", nullable = false)
+    @JsonBackReference
     private SurveyResult surveyResult;  // 关联的 SurveyResult
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonBackReference
     private Question question;  // 关联的 Question
 
     @Column(nullable = false)

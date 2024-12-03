@@ -7,6 +7,7 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,15 +28,16 @@ public class QuestionOption {
     @Setter
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonBackReference  // 使 Question -> Survey 的反向引用被忽略
     private Question question; // 选项属于一个问题
 
     @Setter
     @Column(nullable = false)
-    private String content; // 选项内容
+    private String optionContent; // 选项内容
 
     @Override
     public String toString() {
-        return "Option{id=" + id + ", content='" + content + "'}";
+        return "Option{id=" + id + ", content='" + optionContent + "'}";
     }
 }
 

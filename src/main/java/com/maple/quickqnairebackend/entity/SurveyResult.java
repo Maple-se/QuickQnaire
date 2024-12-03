@@ -7,14 +7,17 @@ package com.maple.quickqnairebackend.entity;
  * @version : 1.0
  * @description :
  */
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -26,18 +29,23 @@ public class SurveyResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;  // SurveyResult 的唯一标识
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "survey_id", nullable = false)
+    @JsonBackReference
     private Survey survey;  // 关联的 Survey
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = true)  // user_id 可能为空，对于匿名用户
+    @JsonBackReference
     private User user;  // 关联的 User
 
     @Column(nullable = true)
-    private String anonymousId;  // 匿名用户标识，对于匿名问卷使用
+    private Boolean anonymousId = false;  // 匿名用户标识，对于匿名问卷使用
 
     @OneToMany(mappedBy = "surveyResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<QuestionResult> questionResults;  // 该用户填写的该问卷中的所有问题答案
 
     @Column(nullable = false)
@@ -51,8 +59,8 @@ public class SurveyResult {
         }
 
         // 如果是匿名用户，生成一个匿名ID
-        if (this.anonymousId == null && this.user == null) {
-            this.anonymousId = UUID.randomUUID().toString();  // 使用 UUID 生成唯一的匿名标识
+        if (this.user == null) {
+            this.anonymousId = true;  // 使用 UUID 生成唯一的匿名标识
         }
     }
 }
