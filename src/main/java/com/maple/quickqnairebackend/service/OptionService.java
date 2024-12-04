@@ -7,6 +7,9 @@ package com.maple.quickqnairebackend.service;
  * @version : 1.0
  * @description :
  */
+import com.maple.quickqnairebackend.dto.QuestionCreationDTO;
+import com.maple.quickqnairebackend.dto.QuestionOptionCreationDTO;
+import com.maple.quickqnairebackend.dto.SurveyUpdateDTO;
 import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.repository.OptionRepository;
@@ -30,11 +33,12 @@ public class OptionService {
     // 创建新的选项
     //ToDo:是否需要返回实体
     @Transactional
-    public QuestionOption createOption(Long questionId, QuestionOption option) {
+    public QuestionOption createOption(Long questionId, QuestionOptionCreationDTO odto) {
         // 查找问题
         Optional<Question> questionOptional = questionRepository.findById(questionId);
         if (questionOptional.isPresent()) {
             Question question = questionOptional.get();
+            QuestionOption option = toEntity(odto);
             option.setQuestion(question);  // 设置选项属于该问题
             return optionRepository.save(option);
         } else {
@@ -42,17 +46,18 @@ public class OptionService {
         }
     }
 
+    private QuestionOption toEntity(QuestionOptionCreationDTO dto) {
+        QuestionOption questionOption = new QuestionOption();
+        questionOption.setOptionContent(dto.getOptionContent());
+        return questionOption;
+    }
+
     // 更新选项
     @Transactional
-    public QuestionOption updateOption(Long optionId, QuestionOption updatedOption) {
-        Optional<QuestionOption> optionOptional = optionRepository.findById(optionId);
-        if (optionOptional.isPresent()) {
-            QuestionOption option = optionOptional.get();
-            option.setOptionContent(updatedOption.getOptionContent());  // 更新选项内容
-            return optionRepository.save(option);
-        } else {
-            throw new IllegalArgumentException("Option not found with id " + optionId);
-        }
+    public QuestionOption updateOption(QuestionOption option, SurveyUpdateDTO.QuestionUpdateDTO.OptionUpdateDTO optionUpdateDTO) {
+        if (optionUpdateDTO.getOptionText() != null) option.setOptionContent(optionUpdateDTO.getOptionText());
+        return optionRepository.save(option);
+
     }
 
     // 删除选项

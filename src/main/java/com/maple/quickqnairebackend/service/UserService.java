@@ -8,6 +8,9 @@ package com.maple.quickqnairebackend.service;
  * @description :
  */
 
+import com.maple.quickqnairebackend.dto.QuestionCreationDTO;
+import com.maple.quickqnairebackend.dto.UserDTO;
+import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +32,9 @@ public class UserService {
 
     // 创建用户
     @Transactional  // 添加事务注解，保证操作的原子性
-    public void createUser(User user) {
+    public void createUser(UserDTO userDTO) {
+
+        User user = toEntity(userDTO);
         // 在服务层进行唯一性检查
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("用户名已存在");
@@ -55,6 +60,16 @@ public class UserService {
         }catch (Exception e){
             throw new IllegalArgumentException(e.getMessage() +" 用户创建失败");
         }
+    }
+
+
+    private User toEntity(UserDTO dto) {
+        User user = new User();
+        user.setUsername(dto.getUsername());
+        user.setPassword(dto.getPassword());
+        user.setEmail(dto.getEmail());
+        user.setRole(dto.getRole());
+        return user;
     }
 
     //用户名是否存在

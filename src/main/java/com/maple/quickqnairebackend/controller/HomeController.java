@@ -2,6 +2,7 @@ package com.maple.quickqnairebackend.controller;
 
 import com.maple.quickqnairebackend.dto.LoginRequest;
 import com.maple.quickqnairebackend.dto.LoginResponse;
+import com.maple.quickqnairebackend.dto.UserDTO;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.UserService;
 import com.maple.quickqnairebackend.util.JwtTokenUtil;
@@ -41,7 +42,7 @@ public class HomeController {
 
     // 注册接口：用户创建
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody User newUser) {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody UserDTO newUser) {
         try {
             // 调用服务层创建用户
             userService.createUser(newUser);

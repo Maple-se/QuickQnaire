@@ -8,13 +8,13 @@ package com.maple.quickqnairebackend.dto;
  * @description :
  */
 
-import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Setter
@@ -22,39 +22,19 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SurveyCreationDTO {
+    @NotNull(message = "问卷标题不能为空")
     private String title;  // 问卷标题
+
+    @NotNull(message = "问卷描述不能为空")
     private String description;  // 问卷描述
+
+    @NotNull(message = "问卷访问权限不能为空")
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
 
     private Integer userSetDuration;  // 用户自定义的持续时间（小时）
     private Integer maxResponses;  // 用户自定义的最大响应数
 
-    private List<QuestionDTO> questions;  // 问卷中的问题列表
+    private List<QuestionCreationDTO> questions;  // 问卷中的问题列表
 
-    // 可以添加其他字段，如问卷的初步设置
-
-    // 问题DTO，包含问题和选项信息
-    @Setter
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class QuestionDTO {
-        private String questionContent;  // 问题内容
-        private Question.QuestionType questionType;  // 问题类型（单选、多选等）
-
-        private Boolean required; // 是否为必答问题
-
-        private List<QuestionOptionDTO> options;  // 该问题的选项列表
-
-
-        // 选项DTO，包含选项内容
-        @Setter
-        @Getter
-        @NoArgsConstructor
-        @AllArgsConstructor
-        public static class QuestionOptionDTO {
-            private String optionContent;  // 选项内容
-        }
-    }
 }
 

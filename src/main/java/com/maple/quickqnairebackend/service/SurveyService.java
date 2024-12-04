@@ -2,6 +2,7 @@ package com.maple.quickqnairebackend.service;
 
 import com.maple.quickqnairebackend.dto.SurveyCreationDTO;
 import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
+import com.maple.quickqnairebackend.dto.SurveyUpdateDTO;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Survey;
@@ -48,65 +49,29 @@ public class SurveyService {
 
     // 创建新问卷
     @Transactional
-    public SurveySimpleInfoDTO createSurvey(Survey survey, Long userId) {
+    public SurveySimpleInfoDTO createSurvey(SurveyCreationDTO creationDTO, Long userId) {
         User user = userService.getUserById(userId);
+        Survey survey = toEntity(creationDTO);
         survey.setDuration(defaultSurveyDuration);
         survey.setCreatedBy(user);  // 设置创建者
         survey.create(); // 设置其他必要字段
-
+        if(user.getRole().equals(User.Role.ADMIN)){
+            survey.approve();
+        }
         // 保存 Survey 并返回状态字段 DTO
          return  surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
 
-    //ToDo:有问题，待进一步调试
-    @Transactional
-    public Survey toEntity(SurveyCreationDTO dto,Long userId) {
+    private Survey toEntity(SurveyCreationDTO dto) {
         Survey survey = new Survey();
         survey.setTitle(dto.getTitle());
         survey.setDescription(dto.getDescription());
         survey.setAccessLevel(dto.getAccessLevel());
         survey.setUserSetDuration(dto.getUserSetDuration());
         survey.setMaxResponses(dto.getMaxResponses());
-        survey.setCreatedBy(userService.getUserById(userId));
-        survey.create();
-
-        Survey createdSurvey = surveyRepository.save(survey);
-
-        // 设置问题
-        List<Question> questions = new ArrayList<>();
-        if (dto.getQuestions() != null) {
-            questions = dto.getQuestions().stream().map(questionDTO -> {
-                Question question = new Question();
-                question.setQuestionContent(questionDTO.getQuestionContent());
-                question.setType(questionDTO.getQuestionType());
-                question.setRequired(questionDTO.getRequired());
-                question.setSurvey(createdSurvey);
-                // 创建问题并保存
-                Question createdQuestion = questionRepository.save(question);
-
-                // 设置选项
-                if (questionDTO.getQuestionType() != Question.QuestionType.TEXT) {
-                    List<QuestionOption> options = new ArrayList<>();
-                    if (questionDTO.getOptions() != null) {
-                        options = questionDTO.getOptions().stream().map(optionDTO -> {
-                            QuestionOption option = new QuestionOption();
-                            option.setOptionContent(optionDTO.getOptionContent());
-                            option.setQuestion(createdQuestion);
-                            optionRepository.save(option);
-                            return option;
-                        }).collect(Collectors.toList());
-                    }
-                    question.setOptions(options);
-                }
-                return question;
-            }).collect(Collectors.toList());
-        }
-        survey.setQuestions(questions);
-
         return survey;
     }
-
 
 
     // 获取所有问卷
@@ -122,22 +87,15 @@ public class SurveyService {
 
     // 更新问卷信息
     @Transactional
-    public SurveySimpleInfoDTO updateSurvey(Long id, Survey updatedSurvey) {
-        Survey existingSurvey = surveyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
-
-        //只允许在草稿draft状态下进行问卷更新
-        if(existingSurvey.getStatus()!= Survey.SurveyStatus.DRAFT){
-            throw new IllegalArgumentException("Survey status error");
-        }
+    public SurveySimpleInfoDTO updateSurvey(Survey survey, SurveyUpdateDTO updatedSurvey) {
         // 更新基本信息
-        existingSurvey.setTitle(updatedSurvey.getTitle());
-        existingSurvey.setDescription(updatedSurvey.getDescription());
-        existingSurvey.setMaxResponses(updatedSurvey.getMaxResponses());
-        existingSurvey.setUserSetDuration(updatedSurvey.getUserSetDuration());
-        existingSurvey.setAccessLevel(updatedSurvey.getAccessLevel());
+        if (updatedSurvey.getTitle() != null) survey.setTitle(updatedSurvey.getTitle());
+        if (updatedSurvey.getDescription() != null) survey.setDescription(updatedSurvey.getDescription());
+        if (updatedSurvey.getAccessLevel() != null) survey.setAccessLevel(updatedSurvey.getAccessLevel());
+        if (updatedSurvey.getUserSetDuration() != null) survey.setUserSetDuration(updatedSurvey.getUserSetDuration());
+        if (updatedSurvey.getMaxResponses() != null) survey.setMaxResponses(updatedSurvey.getMaxResponses());
 
-        return surveyToSimpleInfoDTO(surveyRepository.save(existingSurvey));
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
 
@@ -232,38 +190,38 @@ public class SurveyService {
 
     // 用户提交问卷，管理员进行审核
     @Transactional
-    public void submitSurveyForApproval(Long surveyId) {
+    public SurveySimpleInfoDTO submitSurveyForApproval(Long surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.submit();
-        surveyRepository.save(survey);
+       return surveyToSimpleInfoDTO(surveyRepository.save(survey)) ;
     }
 
     // 管理员批准问卷
     @Transactional
-    public void approveSurvey(Long surveyId) {
+    public SurveySimpleInfoDTO approveSurvey(Long surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.approve();
-        surveyRepository.save(survey);
+      return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
     // 管理员拒绝问卷
     @Transactional
-    public void rejectSurvey(Long surveyId) {
+    public SurveySimpleInfoDTO rejectSurvey(Long surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.reject();
-        surveyRepository.save(survey);
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
     // 关闭问卷
     @Transactional
-    public void closeSurvey(Long surveyId) {
+    public SurveySimpleInfoDTO closeSurvey(Long surveyId) {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.close();
-        surveyRepository.save(survey);
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
 

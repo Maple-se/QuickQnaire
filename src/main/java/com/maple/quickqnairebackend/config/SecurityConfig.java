@@ -36,7 +36,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/quickqnaire/login", "/quickqnaire/register").permitAll()  // 注册和登录接口无需认证
-                .antMatchers("/quickqnaire/public-survey/**").permitAll()  // 让所有 /quickqnaire/** 路径的请求都不需要认证
+                .antMatchers("/quickqnaire/detail/**").permitAll()  // 让所有 /quickqnaire/** 路径的请求都不需要认证
                 .antMatchers("/admin/**").hasRole("ADMIN")  // 只有管理员可以访问 /admin/** 路径
                 .antMatchers("/user/**").hasRole("USER")  // 只有普通用户可以访问 /user/** 路径
                 .anyRequest().authenticated()  // 其他接口需要认证
