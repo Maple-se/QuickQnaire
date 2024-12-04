@@ -50,15 +50,15 @@ public class SurveyController {
     //创建问卷
     @Transactional
     @PostMapping("/create")
-    public ResponseEntity<?> createSurvey(@RequestHeader("Authorization") String authorization,@Valid @RequestBody SurveyCreationDTO surveyCreationDTO){
+    public ResponseEntity<?> createSurvey(@RequestHeader("Authorization") String authorization,@RequestBody SurveyDTO surveyCreationDTO){
         try{
             Long userId = authenticationUtil.authenticateAndGetUserId(authorization);
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.createSurvey(surveyCreationDTO,userId);
-            for (QuestionCreationDTO qdto: surveyCreationDTO.getQuestions()) {
+            for (QuestionDTO qdto: surveyCreationDTO.getQuestions()) {
                 Question createdQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(),qdto);
                 // 根据问题类型，创建选项（如果是单选或多选类型）
                 if (qdto.getQuestionType() == Question.QuestionType.SINGLE_CHOICE || qdto.getQuestionType() == Question.QuestionType.MULTIPLE_CHOICE) {
-                    for (QuestionOptionCreationDTO odto: qdto.getOptions()) {
+                    for (OptionDTO odto: qdto.getOptions()) {
                         optionService.createOption(createdQuestion.getId(),odto);
                     }
                 }
@@ -72,65 +72,57 @@ public class SurveyController {
     }
 
     //更新问卷
-    //ToDo:将创建与更新抽象出基类，需调整DTO部分的设计
     @Transactional
     @PutMapping("/update-survey")
-    public ResponseEntity<?> updateSurveyDetail(@RequestHeader(value = "Authorization") String authorization,@Valid @RequestBody SurveyUpdateDTO sdto){
+    public ResponseEntity<?> updateSurveyDetail(@RequestHeader(value = "Authorization") String authorization,@RequestBody SurveyDTO sdto){
         try {
             Long userId = authenticationUtil.authenticateAndGetUserId(authorization);
             User user = userService.getUserById(userId);
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
+
+            //问卷创建者才可以更新
             if(survey.getCreatedBy()!=user){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
             }
+            //草稿状态才可以更新
             if(survey.getStatus() != Survey.SurveyStatus.DRAFT){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
             }
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.updateSurvey(survey,sdto);
 
             // 更新问题列表
-            for (SurveyUpdateDTO.QuestionUpdateDTO questionDTO : sdto.getQuestions()) {
-                if (questionDTO.getId() != null) {
+            for (QuestionDTO questionDTO : sdto.getQuestions()) {
+                if (questionDTO.getQuestionId() != null) {
                     // 如果问题ID存在，更新现有问题
-                    Question question = questionService.getQuestionById(questionDTO.getId());
+                    Question question = questionService.getQuestionById(questionDTO.getQuestionId());
                     Question updatedQuestion = questionService.updateQuestion(question,questionDTO);
                     // 更新选项
-                    for (SurveyUpdateDTO.QuestionUpdateDTO.OptionUpdateDTO optionDTO : questionDTO.getOptions()) {
-                        if (optionDTO.getId() != null) {
+                    for (OptionDTO optionDTO : questionDTO.getOptions()) {
+                        if (optionDTO.getOptionId() != null) {
                             // 如果选项ID存在，更新现有选项
-                            QuestionOption option = optionService.getOptionById(optionDTO.getId());
-                            QuestionOption updatedOption = optionService.updateOption(option,optionDTO);
+                            QuestionOption option = optionService.getOptionById(optionDTO.getOptionId());
+                            optionService.updateOption(option,optionDTO);
                         } else {
                             // 新增选项
-                           // optionService.createOption(updatedQuestion.getId(),optionDTO);
-//                            QuestionOption newOption = new QuestionOption();
-//                            newOption.setOptionText(optionDTO.getOptionText());
-//                            question.addOption(newOption);
+                            optionService.createOption(updatedQuestion.getId(),optionDTO);
                         }
                     }
                 } else {
                     // 新增问题
-//                    Question newQuestion = new Question();
-//                    newQuestion.setQuestionText(questionDTO.getQuestionText());
-//                    newQuestion.setQuestionType(questionDTO.getQuestionType());
-//                    newQuestion.setRequired(questionDTO.getRequired());
-//
-//                    // 新增选项
-//                    for (SurveyUpdateDTO.QuestionDTO.QuestionOptionDTO optionDTO : questionDTO.getOptions()) {
-//                        QuestionOption newOption = new QuestionOption();
-//                        newOption.setOptionText(optionDTO.getOptionText());
-//                        newQuestion.addOption(newOption);
-//                    }
-//
-//                    survey.addQuestion(newQuestion);
+                    Question addQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(),questionDTO);
+                    // 新增选项
+                    for (OptionDTO optionDTO : questionDTO.getOptions()) {
+                        optionService.createOption(addQuestion.getId(),optionDTO);
+                    }
                 }
-            }
+            }//更新问题列表
+
+            //ToDo:是否应该返回SurveyDetailDTO
             return ResponseEntity.ok(surveySimpleInfoDTO);
         }catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-
     }
 
 
@@ -159,6 +151,7 @@ public class SurveyController {
     }
 
 
+    //ToDo:问卷状态变更存在冗余代码
     //管理员批准问卷，状态变为active
     @PutMapping("/approval-survey/{encodedSurveyId}")
     public ResponseEntity<?> approvalSurvey(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){

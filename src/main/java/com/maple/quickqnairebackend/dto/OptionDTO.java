@@ -5,10 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotNull;
-
 /**
- * Created by zong chang on 2024/12/4 12:56
+ * Created by zong chang on 2024/12/5 1:46
  *
  * @author : Maple-se
  * @version : 1.0
@@ -19,7 +17,8 @@ import javax.validation.constraints.NotNull;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class QuestionOptionCreationDTO {
-    @NotNull(message = "选项内容不能为空")
+public class OptionDTO {
+    private Long optionId;  // 选项ID，用于更新现有选项
+
     private String optionContent;  // 选项内容
 }

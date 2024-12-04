@@ -7,9 +7,7 @@ package com.maple.quickqnairebackend.service;
  * @version : 1.0
  * @description :
  */
-import com.maple.quickqnairebackend.dto.QuestionCreationDTO;
-import com.maple.quickqnairebackend.dto.SurveyCreationDTO;
-import com.maple.quickqnairebackend.dto.SurveyUpdateDTO;
+import com.maple.quickqnairebackend.dto.QuestionDTO;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
@@ -32,7 +30,7 @@ public class QuestionService {
 
     // 创建新的问题
     @Transactional
-    public Question createQuestion(Long surveyId, QuestionCreationDTO qdto) {
+    public Question createQuestion(Long surveyId, QuestionDTO qdto) {
         // 查找问卷
         Optional<Survey> surveyOptional = surveyRepository.findById(surveyId);
         if (surveyOptional.isPresent()) {
@@ -46,7 +44,7 @@ public class QuestionService {
     }
 
 
-    private Question toEntity(QuestionCreationDTO dto) {
+    private Question toEntity(QuestionDTO dto) {
         Question question = new Question();
         question.setQuestionContent(dto.getQuestionContent());
         question.setType(dto.getQuestionType());
@@ -57,8 +55,8 @@ public class QuestionService {
     // 更新问题
     //ToDo:QuestionType更改逻辑需重新考虑
     @Transactional
-    public Question updateQuestion(Question question, SurveyUpdateDTO.QuestionUpdateDTO questionUpdateDTO) {
-        if (questionUpdateDTO.getQuestionText() != null) question.setQuestionContent(questionUpdateDTO.getQuestionText());
+    public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
+        if (questionUpdateDTO.getQuestionContent() != null) question.setQuestionContent(questionUpdateDTO.getQuestionContent());
         //ToDo
         if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
         if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());

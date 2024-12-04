@@ -1,10 +1,7 @@
 package com.maple.quickqnairebackend.service;
 
-import com.maple.quickqnairebackend.dto.SurveyCreationDTO;
 import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
-import com.maple.quickqnairebackend.dto.SurveyUpdateDTO;
-import com.maple.quickqnairebackend.entity.Question;
-import com.maple.quickqnairebackend.entity.QuestionOption;
+import com.maple.quickqnairebackend.dto.SurveyDTO;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.OptionRepository;
@@ -15,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -49,7 +45,7 @@ public class SurveyService {
 
     // 创建新问卷
     @Transactional
-    public SurveySimpleInfoDTO createSurvey(SurveyCreationDTO creationDTO, Long userId) {
+    public SurveySimpleInfoDTO createSurvey(SurveyDTO creationDTO, Long userId) {
         User user = userService.getUserById(userId);
         Survey survey = toEntity(creationDTO);
         survey.setDuration(defaultSurveyDuration);
@@ -63,7 +59,7 @@ public class SurveyService {
     }
 
 
-    private Survey toEntity(SurveyCreationDTO dto) {
+    private Survey toEntity(SurveyDTO dto) {
         Survey survey = new Survey();
         survey.setTitle(dto.getTitle());
         survey.setDescription(dto.getDescription());
@@ -87,7 +83,7 @@ public class SurveyService {
 
     // 更新问卷信息
     @Transactional
-    public SurveySimpleInfoDTO updateSurvey(Survey survey, SurveyUpdateDTO updatedSurvey) {
+    public SurveySimpleInfoDTO updateSurvey(Survey survey, SurveyDTO updatedSurvey) {
         // 更新基本信息
         if (updatedSurvey.getTitle() != null) survey.setTitle(updatedSurvey.getTitle());
         if (updatedSurvey.getDescription() != null) survey.setDescription(updatedSurvey.getDescription());

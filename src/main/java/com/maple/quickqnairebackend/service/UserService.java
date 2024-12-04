@@ -8,9 +8,7 @@ package com.maple.quickqnairebackend.service;
  * @description :
  */
 
-import com.maple.quickqnairebackend.dto.QuestionCreationDTO;
 import com.maple.quickqnairebackend.dto.UserDTO;
-import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;

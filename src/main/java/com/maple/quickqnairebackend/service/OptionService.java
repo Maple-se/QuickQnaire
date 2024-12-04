@@ -7,9 +7,7 @@ package com.maple.quickqnairebackend.service;
  * @version : 1.0
  * @description :
  */
-import com.maple.quickqnairebackend.dto.QuestionCreationDTO;
-import com.maple.quickqnairebackend.dto.QuestionOptionCreationDTO;
-import com.maple.quickqnairebackend.dto.SurveyUpdateDTO;
+import com.maple.quickqnairebackend.dto.OptionDTO;
 import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.repository.OptionRepository;
@@ -33,7 +31,7 @@ public class OptionService {
     // 创建新的选项
     //ToDo:是否需要返回实体
     @Transactional
-    public QuestionOption createOption(Long questionId, QuestionOptionCreationDTO odto) {
+    public QuestionOption createOption(Long questionId, OptionDTO odto) {
         // 查找问题
         Optional<Question> questionOptional = questionRepository.findById(questionId);
         if (questionOptional.isPresent()) {
@@ -46,7 +44,7 @@ public class OptionService {
         }
     }
 
-    private QuestionOption toEntity(QuestionOptionCreationDTO dto) {
+    private QuestionOption toEntity(OptionDTO dto) {
         QuestionOption questionOption = new QuestionOption();
         questionOption.setOptionContent(dto.getOptionContent());
         return questionOption;
@@ -54,8 +52,8 @@ public class OptionService {
 
     // 更新选项
     @Transactional
-    public QuestionOption updateOption(QuestionOption option, SurveyUpdateDTO.QuestionUpdateDTO.OptionUpdateDTO optionUpdateDTO) {
-        if (optionUpdateDTO.getOptionText() != null) option.setOptionContent(optionUpdateDTO.getOptionText());
+    public QuestionOption updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
+        if (optionUpdateDTO.getOptionContent() != null) option.setOptionContent(optionUpdateDTO.getOptionContent());
         return optionRepository.save(option);
 
     }
