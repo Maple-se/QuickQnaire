@@ -46,7 +46,7 @@ public class HomeController {
         try {
             // 调用服务层创建用户
             userService.createUser(newUser);
-            return ResponseEntity.status(HttpStatus.CREATED).body("用户注册成功");
+            return ResponseEntity.status(HttpStatus.CREATED).body("User Register Success");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());  // 返回错误消息
         }

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -34,6 +35,7 @@ public class UserService {
 
         User user = toEntity(userDTO);
         // 在服务层进行唯一性检查
+        //保证用户名唯一
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("用户名已存在");
         }
@@ -153,6 +155,25 @@ public class UserService {
             throw new IllegalArgumentException("User not found");
         }
         userRepository.deleteById(userId);
+    }
+
+    //users到UserDTO的转换
+    public List<UserDTO> usersToDTO(List<User> users) {
+        return users
+                .stream()
+                .map(this::userToDTO)
+                .collect(Collectors.toList());
+    }
+
+    //User到UserDTO的转换
+    public UserDTO userToDTO(User user){
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        //userDTO.setPassword(user.getPassword());
+        userDTO.setRole(user.getRole());
+        userDTO.setEmail(user.getEmail());
+        return userDTO;
     }
 
     // 获取所有用户

@@ -128,6 +128,12 @@ public class Survey {
 
     // 自定义方法：批准并发布问卷
     public void approve() {
+        //若问卷是管理员创建的，直接为active状态
+        if(this.getCreatedBy().getRole()==User.Role.ADMIN){
+            this.status = SurveyStatus.ACTIVE;
+            this.activeStartDate = new Date();  // 设置问卷被批准后的开始时间
+        }
+        //否则，用户创建应先提交给管理员审核
         if (this.status == SurveyStatus.PENDING_APPROVAL) {
             this.status = SurveyStatus.ACTIVE;
             this.activeStartDate = new Date();  // 设置问卷被批准后的开始时间

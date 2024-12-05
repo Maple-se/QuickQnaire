@@ -39,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/quickqnaire/detail/**").permitAll()  // 让所有 /quickqnaire/** 路径的请求都不需要认证
                 .antMatchers("/admin/**").hasRole("ADMIN")  // 只有管理员可以访问 /admin/** 路径
                 .antMatchers("/user/**").hasRole("USER")  // 只有普通用户可以访问 /user/** 路径
-                .anyRequest().authenticated()  // 其他接口需要认证
+                .anyRequest().authenticated()  //其他接口需要认证
                 .and()
                 .addFilterBefore(new JwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);  // JWT 过滤器
     }

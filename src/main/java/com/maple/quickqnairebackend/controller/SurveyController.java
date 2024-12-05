@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,6 +47,7 @@ public class SurveyController {
     private UserService userService;
 
     //创建问卷
+    //创建问卷API测试通过
     @Transactional
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@RequestHeader("Authorization") String authorization,@RequestBody SurveyDTO surveyCreationDTO){
@@ -72,6 +72,7 @@ public class SurveyController {
     }
 
     //更新问卷
+    //ToDo:待修改以及待测
     @Transactional
     @PutMapping("/update-survey")
     public ResponseEntity<?> updateSurveyDetail(@RequestHeader(value = "Authorization") String authorization,@RequestBody SurveyDTO sdto){
@@ -127,6 +128,7 @@ public class SurveyController {
 
 
     //用户提交问卷，管理员审批
+    //API测试通过
     @PutMapping("/submit-for-approval/{encodedSurveyId}")
     public ResponseEntity<?> submitSurveyForApproval(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){
        try {
@@ -153,6 +155,7 @@ public class SurveyController {
 
     //ToDo:问卷状态变更存在冗余代码
     //管理员批准问卷，状态变为active
+    //API测试通过
     @PutMapping("/approval-survey/{encodedSurveyId}")
     public ResponseEntity<?> approvalSurvey(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){
         try {
@@ -178,6 +181,7 @@ public class SurveyController {
     }
 
     //管理员拒绝问卷，状态变为草稿
+    //API测试通过
     @PutMapping("/reject-survey/{encodedSurveyId}")
     public ResponseEntity<?> rejectSurvey(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){
         try {
@@ -205,6 +209,7 @@ public class SurveyController {
 
 
     //管理员或用户，手动关闭问卷
+    //API测试通过
     @PutMapping("/close-survey/{encodedSurveyId}")
     public ResponseEntity<?> closeSurvey(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){
         try {
@@ -226,6 +231,30 @@ public class SurveyController {
             return ResponseEntity.ok(surveySimpleInfoDTO);
         }catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+    //删除问卷
+    //API测试通过
+    @DeleteMapping("/delete-survey/{encodedSurveyId}")
+    public ResponseEntity<?> deleteSurvey(@RequestHeader(value = "Authorization") String authorization, @PathVariable String encodedSurveyId){
+        try {
+            Long userId = authenticationUtil.authenticateAndGetUserId(authorization);
+            User user = userService.getUserById(userId);
+
+            // 解码 Base64 编码的 surveyId
+            String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+            Long surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+            // 根据解码后的 surveyId 获取问卷
+            Survey survey = surveyService.getSurveyById(surveyId);
+            if(survey.getCreatedBy()!=user && user.getRole() != User.Role.ADMIN){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
+            }
+            surveyService.deleteSurvey(survey.getId());
+            return ResponseEntity.status(HttpStatus.FOUND).body("Delete Success");  // 删除成功，返回204 No Content
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // 问卷不存在
         }
     }
 
@@ -260,7 +289,7 @@ public class SurveyController {
             //检查用户是否登录，若未登录，则返回登录页面
             //Survey.AccessLevel.PRIVATE该访问级别要求已经登录用户填写
             if(survey.getAccessLevel() == Survey.AccessLevel.PRIVATE){
-                Long userId = authenticationUtil.authenticateAndGetUserId(authorization);
+                authenticationUtil.authenticateAndGetUserId(authorization);
             }
 
             //ToDo:暂时不实现
