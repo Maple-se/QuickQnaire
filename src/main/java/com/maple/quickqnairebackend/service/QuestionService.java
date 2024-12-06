@@ -12,6 +12,7 @@ import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,8 +57,8 @@ public class QuestionService {
     //ToDo:QuestionType更改逻辑需重新考虑
     @Transactional
     public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
-        if (questionUpdateDTO.getQuestionContent() != null) question.setQuestionContent(questionUpdateDTO.getQuestionContent());
-        //ToDo
+        if (StringUtils.isNotBlank(questionUpdateDTO.getQuestionContent())) question.setQuestionContent(questionUpdateDTO.getQuestionContent());
+        //ToDo:问卷类型需要进一步做判断才能更新
         if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
         if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());
         return questionRepository.save(question);

@@ -7,6 +7,7 @@ import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.OptionRepository;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -85,8 +86,8 @@ public class SurveyService {
     @Transactional
     public SurveySimpleInfoDTO updateSurvey(Survey survey, SurveyDTO updatedSurvey) {
         // 更新基本信息
-        if (updatedSurvey.getTitle() != null) survey.setTitle(updatedSurvey.getTitle());
-        if (updatedSurvey.getDescription() != null) survey.setDescription(updatedSurvey.getDescription());
+        if (StringUtils.isNotBlank(updatedSurvey.getTitle())) survey.setTitle(updatedSurvey.getTitle());
+        if (StringUtils.isNotBlank(updatedSurvey.getDescription())) survey.setDescription(updatedSurvey.getDescription());
         if (updatedSurvey.getAccessLevel() != null) survey.setAccessLevel(updatedSurvey.getAccessLevel());
         if (updatedSurvey.getUserSetDuration() != null) survey.setUserSetDuration(updatedSurvey.getUserSetDuration());
         if (updatedSurvey.getMaxResponses() != null) survey.setMaxResponses(updatedSurvey.getMaxResponses());
@@ -122,7 +123,7 @@ public class SurveyService {
 
     // 检查问卷是否应当结束
     //ToDo:待考虑
-    public boolean checkIfSurveyShouldEnd(Long surveyId) {
+    public boolean isSurveyshouldClose(Long surveyId) {
         if(isSurveyClosed(surveyId)){
             return false;
         }
@@ -236,7 +237,8 @@ public class SurveyService {
                 survey.getId(),
                 survey.getTitle(),
                 survey.getDescription(),
-                survey.getStatus());
+                survey.getStatus(),
+                survey.getAccessLevel());
     }
 }
 

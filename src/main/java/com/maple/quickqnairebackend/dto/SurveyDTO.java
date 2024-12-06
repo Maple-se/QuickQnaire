@@ -9,11 +9,15 @@ package com.maple.quickqnairebackend.dto;
  */
 
 import com.maple.quickqnairebackend.entity.Survey;
+import com.maple.quickqnairebackend.validation.SurveyCreateGroup;
+import com.maple.quickqnairebackend.validation.SurveyUpdateGroup;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @Setter
@@ -23,12 +27,18 @@ import java.util.List;
 public class SurveyDTO {
     //创建问卷时，不需要提供id
     //更新时需要检查id
+    @NotNull(groups = SurveyUpdateGroup.class, message = "问卷ID不能为空")
     private Long surveyId;  // 问卷ID
 
+    @NotNull(groups = SurveyCreateGroup.class, message = "问卷标题不能为空")
+    @Size(max = 100, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题长度不能超过100个字符")
     private String title;  // 问卷标题
 
+    @NotNull(groups = SurveyCreateGroup.class, message = "问卷描述不能为空")
+    @Size(max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不能超过200个字符")
     private String description;  // 问卷描述
 
+    @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷访问权限不能为空")
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
 
     private Integer userSetDuration;  // 用户自定义的持续时间（小时）

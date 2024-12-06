@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -121,7 +122,7 @@ public class UserService {
     //ToDo:密码更新方法有待检查
     public void updatePassword(User user, String newPassword) {
         // 如果提供了新的密码
-        if (!newPassword.isEmpty()) {
+        if (StringUtils.isNotBlank(newPassword)) {
             String encodedPassword = passwordEncoder.encode(newPassword);  // 密码加密
             user.setPassword(encodedPassword);  // 设置加密后的密码
         }
@@ -129,22 +130,14 @@ public class UserService {
 
     // 通过用户ID更新用户信息
     @Transactional  // 添加事务注解，保证操作的原子性
-    public User updateUser(Long userId, String newUsername, String newEmail, String newPassword) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-        if (!optionalUser.isPresent()) {
-            throw new IllegalArgumentException("User not found");
-        }
-
-        User user = optionalUser.get();
+    public UserDTO updateUser(User user, UserDTO updatedUser) {
 
         // 更新字段
-        updateUsername(user, newUsername);
-        updateEmail(user, newEmail);
-        updatePassword(user, newPassword);
-
+        if(StringUtils.isNotBlank(updatedUser.getUsername())) updateUsername(user, updatedUser.getUsername());
+        if(StringUtils.isNotBlank(updatedUser.getEmail())) updateEmail(user, updatedUser.getEmail());;
 
         // 保存更新后的用户
-        return userRepository.save(user);
+        return userToDTO(userRepository.save(user));
     }
 
     // 删除用户

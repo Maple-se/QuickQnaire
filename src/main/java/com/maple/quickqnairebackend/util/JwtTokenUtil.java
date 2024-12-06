@@ -65,6 +65,8 @@ public class JwtTokenUtil {
         String uuid = UUID.randomUUID().toString();
         Date exprireDate = Date.from(Instant.now().plusSeconds(EXPIRATION_TIME));
         //UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        // 将角色转换为 "ROLE_ADMIN" 形式
+        String roleWithPrefix = "ROLE_" + user.getRole();
 
         return Jwts.builder()
                 .header()
@@ -72,7 +74,7 @@ public class JwtTokenUtil {
                 .add("alg", "HS256")
                 .and()
                 .claim("userId", user.getId())  // 将用户 ID 放入 payload
-                .claim("role", user.getRole())  // 将角色信息加入 token
+                .claim("role", roleWithPrefix)  // 将角色信息加入 token
                 .id(uuid)
                 .expiration(exprireDate)
                 .issuedAt(new Date())

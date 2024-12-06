@@ -12,6 +12,7 @@ import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.repository.OptionRepository;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +54,7 @@ public class OptionService {
     // 更新选项
     @Transactional
     public QuestionOption updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
-        if (optionUpdateDTO.getOptionContent() != null) option.setOptionContent(optionUpdateDTO.getOptionContent());
+        if (StringUtils.isNotBlank(optionUpdateDTO.getOptionContent())) option.setOptionContent(optionUpdateDTO.getOptionContent());
         return optionRepository.save(option);
 
     }
