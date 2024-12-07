@@ -63,7 +63,7 @@ public class Question {
     @Setter
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<QuestionResult> questionResults;  // 该问题对应的所有回答
+    private List<QuestionResult> questionResults;  // 该问题对应的所有回答，若删除该问题会级联删除所有该问题的回答记录
 
 
     public enum QuestionType {

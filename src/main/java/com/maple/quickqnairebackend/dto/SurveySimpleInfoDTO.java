@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 
 @Setter
 @Getter
@@ -17,4 +19,5 @@ public class SurveySimpleInfoDTO {
     private String description;
     private Survey.SurveyStatus status;//问卷状态字段
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
+    private Date updatedAt;
 }

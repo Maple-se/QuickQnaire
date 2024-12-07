@@ -38,7 +38,7 @@ public class SurveyDTO {
     @Size(max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不能超过200个字符")
     private String description;  // 问卷描述
 
-    @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷访问权限不能为空")
+    @NotNull(groups = SurveyCreateGroup.class, message = "问卷访问权限不能为空")
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
 
     private Integer userSetDuration;  // 用户自定义的持续时间（小时）

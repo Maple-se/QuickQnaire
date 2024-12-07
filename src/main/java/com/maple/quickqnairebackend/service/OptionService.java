@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ public class OptionService {
     // 创建新的选项
     //ToDo:是否需要返回实体
     @Transactional
-    public QuestionOption createOption(Long questionId, OptionDTO odto) {
+    public QuestionOption createOption(Long questionId, @Valid OptionDTO odto) {
         // 查找问题
         Optional<Question> questionOptional = questionRepository.findById(questionId);
         if (questionOptional.isPresent()) {
@@ -51,12 +52,29 @@ public class OptionService {
         return questionOption;
     }
 
+    // 处理选项列表
+    @Transactional
+    public void processOption(Question question, OptionDTO optionDTO) {
+
+            if (optionDTO.getOptionId() != null) {
+                // 更新现有选项
+                QuestionOption existingOption = getOptionById(optionDTO.getOptionId());
+                if (existingOption != null) {
+                    updateOption(existingOption, optionDTO);
+                } else {
+                    throw new IllegalArgumentException("Option ID " + optionDTO.getOptionId() + " not found");
+                }
+            } else {
+                // 新增选项
+                createOption(question.getId(), optionDTO);
+            }
+    }
+
     // 更新选项
     @Transactional
     public QuestionOption updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
         if (StringUtils.isNotBlank(optionUpdateDTO.getOptionContent())) option.setOptionContent(optionUpdateDTO.getOptionContent());
         return optionRepository.save(option);
-
     }
 
     // 删除选项

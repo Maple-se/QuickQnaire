@@ -2,7 +2,6 @@ package com.maple.quickqnairebackend.controller;
 
 import com.maple.quickqnairebackend.dto.*;
 import com.maple.quickqnairebackend.entity.Question;
-import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.OptionService;
@@ -77,8 +76,30 @@ public class SurveyController {
         }
     }
 
+
+    @GetMapping("/preview/{encodedSurveyId}")
+    public ResponseEntity<?> previewSurvey(@PathVariable String encodedSurveyId){
+        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
+        User user = userService.getUserById(userId);
+        // 解码 Base64 编码的 surveyId
+        String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+        Long surveyId;
+        try {
+            surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
+        }
+        // 根据解码后的 surveyId 获取问卷
+        Survey survey = surveyService.getSurveyById(surveyId);
+        //问卷创建者才可以更新
+        surveyService.validateSurveyOwnership(survey,user);
+        return ResponseEntity.ok(surveyService.toSurveyDTO(survey));
+    }
+
     //更新问卷
-    //ToDo:待修改以及待测
+    //API测试通过
     @Transactional
     @PutMapping("/update-survey")
     public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto){
@@ -91,46 +112,32 @@ public class SurveyController {
             Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
 
             //问卷创建者才可以更新
-            if(survey.getCreatedBy()!=user){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
-            }
+            surveyService.validateSurveyOwnership(survey,user);
             //草稿状态才可以更新
-            if(survey.getStatus() != Survey.SurveyStatus.DRAFT){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
-            }
-            SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.updateSurvey(survey,sdto);
+            surveyService.isDraftStatus(survey);
+            //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
+            Survey updatedSurvey = surveyService.updateSurvey(survey,sdto);
 
+            // 处理问题列表
+            if(sdto.getQuestions() != null){
             // 更新问题列表
             for (QuestionDTO questionDTO : sdto.getQuestions()) {
-                if (questionDTO.getQuestionId() != null) {
-                    // 如果问题ID存在，更新现有问题
-                    Question question = questionService.getQuestionById(questionDTO.getQuestionId());
-                    Question updatedQuestion = questionService.updateQuestion(question,questionDTO);
+               Question updatedQuestion= questionService.processQuestion(updatedSurvey, questionDTO);
+                if(questionDTO.getOptions() != null) {
                     // 更新选项
                     for (OptionDTO optionDTO : questionDTO.getOptions()) {
-                        if (optionDTO.getOptionId() != null) {
-                            // 如果选项ID存在，更新现有选项
-                            QuestionOption option = optionService.getOptionById(optionDTO.getOptionId());
-                            optionService.updateOption(option,optionDTO);
-                        } else {
-                            // 新增选项
-                            optionService.createOption(updatedQuestion.getId(),optionDTO);
-                        }
-                    }
-                } else {
-                    // 新增问题
-                    Question addQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(),questionDTO);
-                    // 新增选项
-                    for (OptionDTO optionDTO : questionDTO.getOptions()) {
-                        optionService.createOption(addQuestion.getId(),optionDTO);
+                        // 处理选项
+                        optionService.processOption(updatedQuestion, optionDTO);
                     }
                 }
-            }//更新问题列表
 
-            //ToDo:是否应该返回SurveyDetailDTO
-            return ResponseEntity.ok(surveySimpleInfoDTO);
-        }catch (IllegalArgumentException e){
+            }
+     }
+            return ResponseEntity.ok(surveyService.toSurveyDTO(surveyService.getSurveyById(sdto.getSurveyId())));
+        } catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
     }
 
@@ -307,8 +314,8 @@ public class SurveyController {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
-            List<SurveySimpleInfoDTO> surveyDTOs = surveyService.getSurveysByUserId(userId);
-            return ResponseEntity.ok(surveyDTOs);
+            List<SurveySimpleInfoDTO> surveySimpleInfoDTOS = surveyService.getSurveysByUserId(userId);
+            return ResponseEntity.ok(surveySimpleInfoDTOS);
         }catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Get Surveys By UserId Error");
         }
@@ -357,36 +364,13 @@ public class SurveyController {
             if(survey.getAccessLevel() == Survey.AccessLevel.RESTRICTED){
 
             }
+            SurveyDTO surveyDTO = surveyService.toSurveyDTO(survey);
+            surveyDTO.setUserSetDuration(null);
+            surveyDTO.setMaxResponses(null);
+            surveyDTO.setAccessLevel(null);
 
-            // 构造 SurveyAnswerDTO
-            SurveyDetailDTO surveyDetailDTO = new SurveyDetailDTO();
-            surveyDetailDTO.setSurveyId(survey.getId());
-            surveyDetailDTO.setTitle(survey.getTitle());
-            surveyDetailDTO.setDescription(survey.getDescription());
-
-            // 设置问题和选项
-            List<SurveyDetailDTO.QuestionDetailDTO> questionDTOList = survey.getQuestions().stream().map(question -> {
-                SurveyDetailDTO.QuestionDetailDTO questionDTO = new SurveyDetailDTO.QuestionDetailDTO();
-                questionDTO.setQuestionId(question.getId());
-                questionDTO.setQuestionContent(question.getQuestionContent());
-                questionDTO.setQuestionType(question.getType());
-
-                // 设置选项
-                List<SurveyDetailDTO.QuestionDetailDTO.OptionDetailDTO> options = question.getOptions().stream().map(option -> {
-                    SurveyDetailDTO.QuestionDetailDTO.OptionDetailDTO optionDTO = new SurveyDetailDTO.QuestionDetailDTO.OptionDetailDTO();
-                    optionDTO.setOptionId(option.getId());
-                    optionDTO.setOptionContent(option.getOptionContent());
-                    return optionDTO;
-                }).collect(Collectors.toList());
-
-                questionDTO.setOptions(options);
-
-                return questionDTO;
-            }).collect(Collectors.toList());
-
-            surveyDetailDTO.setQuestions(questionDTOList);
             //Survey.AccessLevel.PUBLIC，若为公开问卷，无需验证，人人皆可访问
-            return ResponseEntity.ok(surveyDetailDTO);
+            return ResponseEntity.ok(surveyDTO);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -21,13 +24,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionDTO {
-    private Long questionId;  // 问题ID，用于更新现有问题
+    private Long questionId;  // 问题ID，用于更新现有问题,更新时可以为空
 
+    @NotNull(message = "问题内容不能为空")
     private String questionContent;  // 问题内容
 
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "问题类型不能为空")
     private Question.QuestionType questionType;  // 问题类型（单选、多选等）
 
+    @NotNull(message = "是否必答不能为空")
     private Boolean required; // 是否为必答问题
 
-    private List<OptionDTO> options;  // 问题选项，使用 BaseOptionDTO 来支持选项的不同类型
+    private List<OptionDTO> options;  // 问题选项，若为TEXT类型，则此列表为空
 }

@@ -7,6 +7,7 @@ package com.maple.quickqnairebackend.service;
  * @version : 1.0
  * @description :
  */
+import com.maple.quickqnairebackend.dto.OptionDTO;
 import com.maple.quickqnairebackend.dto.QuestionDTO;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
@@ -17,8 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionService {
@@ -29,9 +33,12 @@ public class QuestionService {
     @Autowired
     private SurveyRepository surveyRepository;
 
+    @Autowired
+    private OptionService optionService;
+
     // 创建新的问题
     @Transactional
-    public Question createQuestion(Long surveyId, QuestionDTO qdto) {
+    public Question createQuestion(Long surveyId,@Valid QuestionDTO qdto) {
         // 查找问卷
         Optional<Survey> surveyOptional = surveyRepository.findById(surveyId);
         if (surveyOptional.isPresent()) {
@@ -53,16 +60,45 @@ public class QuestionService {
         return question;
     }
 
+
+    // 处理问题列表
+    @Transactional
+    public Question processQuestion(Survey survey, QuestionDTO questionDTO) {
+        Question updatedQuestion = new Question();
+        // 处理请求中的问题
+            if (questionDTO.getQuestionId() != null) {
+                // 更新现有问题
+                Question existingQuestion = getQuestionById(questionDTO.getQuestionId());
+                if (existingQuestion != null) {
+                  updatedQuestion = updateQuestion(existingQuestion, questionDTO);
+                } else {
+                    throw new IllegalArgumentException("Question ID " + questionDTO.getQuestionId() + " not found");
+                }
+            } else {
+                // 新增问题
+                updatedQuestion = createQuestion(survey.getId(), questionDTO);
+                // 根据问题类型，创建选项（如果是单选或多选类型）
+//                if (questionDTO.getQuestionType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getQuestionType() == Question.QuestionType.MULTIPLE_CHOICE) {
+//                    for (OptionDTO odto: questionDTO.getOptions()) {
+//                        optionService.createOption(updatedQuestion.getId(),odto);
+//                    }
+//                }
+            }
+            return updatedQuestion;
+    }
+
+
     // 更新问题
-    //ToDo:QuestionType更改逻辑需重新考虑
     @Transactional
     public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
         if (StringUtils.isNotBlank(questionUpdateDTO.getQuestionContent())) question.setQuestionContent(questionUpdateDTO.getQuestionContent());
-        //ToDo:问卷类型需要进一步做判断才能更新
-        if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
+        //要么删、要么增、问题类型不必变更
+        //if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
         if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());
         return questionRepository.save(question);
     }
+
+
 
     // 删除问题
     @Transactional
