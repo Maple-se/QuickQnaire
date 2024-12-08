@@ -83,7 +83,7 @@ public class SurveyService {
         if (updatedSurvey.getUserSetDuration() != null) survey.setUserSetDuration(updatedSurvey.getUserSetDuration());
         if (updatedSurvey.getMaxResponses() != null) survey.setMaxResponses(updatedSurvey.getMaxResponses());
 
-        return surveyRepository.save(survey);
+       return surveyRepository.save(survey);
     }
 
 
@@ -230,6 +230,7 @@ public class SurveyService {
         }
     }
 
+    //ToDo:计划使用MapStruct重构
     public SurveyDTO toSurveyDTO(Survey survey){
 
         SurveyDTO surveyDTO = new SurveyDTO();
@@ -250,14 +251,16 @@ public class SurveyService {
             questionDTO.setRequired(question.getRequired());
 
             // 设置选项
-            List<OptionDTO> options = question.getOptions().stream().map(option -> {
-                OptionDTO optionDTO = new OptionDTO();
-                optionDTO.setOptionId(option.getId());
-                optionDTO.setOptionContent(option.getOptionContent());
-                return optionDTO;
-            }).collect(Collectors.toList());
+           // if(question.getOptions()!=null) {
+                List<OptionDTO> options = question.getOptions().stream().map(option -> {
+                    OptionDTO optionDTO = new OptionDTO();
+                    optionDTO.setOptionId(option.getId());
+                    optionDTO.setOptionContent(option.getOptionContent());
+                    return optionDTO;
+                }).collect(Collectors.toList());
 
-            questionDTO.setOptions(options);
+                questionDTO.setOptions(options);
+           // }
 
             return questionDTO;
         }).collect(Collectors.toList());

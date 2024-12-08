@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -31,16 +32,15 @@ public class OptionService {
     private QuestionRepository questionRepository;
 
     // 创建新的选项
-    //ToDo:是否需要返回实体
     @Transactional
-    public QuestionOption createOption(Long questionId, @Valid OptionDTO odto) {
+    public void createOption(Long questionId, @Valid OptionDTO odto) {
         // 查找问题
         Optional<Question> questionOptional = questionRepository.findById(questionId);
         if (questionOptional.isPresent()) {
             Question question = questionOptional.get();
             QuestionOption option = toEntity(odto);
             option.setQuestion(question);  // 设置选项属于该问题
-            return optionRepository.save(option);
+            optionRepository.save(option);
         } else {
             throw new IllegalArgumentException("Question not found with id " + questionId);
         }
@@ -54,8 +54,9 @@ public class OptionService {
 
     // 处理选项列表
     @Transactional
-    public void processOption(Question question, OptionDTO optionDTO) {
+    public void processOption(Question question ,OptionDTO optionDTO) {
 
+        //QuestionOption updatedOption = new QuestionOption();
             if (optionDTO.getOptionId() != null) {
                 // 更新现有选项
                 QuestionOption existingOption = getOptionById(optionDTO.getOptionId());
@@ -66,15 +67,15 @@ public class OptionService {
                 }
             } else {
                 // 新增选项
-                createOption(question.getId(), optionDTO);
+               createOption(question.getId(), optionDTO);
             }
     }
 
     // 更新选项
     @Transactional
-    public QuestionOption updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
+    public void updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
         if (StringUtils.isNotBlank(optionUpdateDTO.getOptionContent())) option.setOptionContent(optionUpdateDTO.getOptionContent());
-        return optionRepository.save(option);
+        optionRepository.save(option);
     }
 
     // 删除选项

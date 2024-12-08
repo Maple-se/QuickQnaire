@@ -2,6 +2,7 @@ package com.maple.quickqnairebackend.controller;
 
 import com.maple.quickqnairebackend.dto.*;
 import com.maple.quickqnairebackend.entity.Question;
+import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.OptionService;
@@ -17,10 +18,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityManager;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +40,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/quickqnaire")
 public class SurveyController {
 
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private SurveyService surveyService;
@@ -51,7 +57,6 @@ public class SurveyController {
 
     //创建问卷
     //创建问卷API测试通过
-    @Transactional
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO){
         try{
@@ -99,7 +104,8 @@ public class SurveyController {
     }
 
     //更新问卷
-    //API测试通过
+    //ToDo:更新逻辑暂时测试通过，错误处理需要进一步考虑
+    //ToDo:是否应该在Controller层加事务注解？
     @Transactional
     @PutMapping("/update-survey")
     public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto){
@@ -123,21 +129,20 @@ public class SurveyController {
             // 更新问题列表
             for (QuestionDTO questionDTO : sdto.getQuestions()) {
                Question updatedQuestion= questionService.processQuestion(updatedSurvey, questionDTO);
-                if(questionDTO.getOptions() != null) {
-                    // 更新选项
-                    for (OptionDTO optionDTO : questionDTO.getOptions()) {
-                        // 处理选项
-                        optionService.processOption(updatedQuestion, optionDTO);
+                if (questionDTO.getQuestionType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getQuestionType() == Question.QuestionType.MULTIPLE_CHOICE) {
+                    for (OptionDTO odto: questionDTO.getOptions()) {
+                      optionService.processOption(updatedQuestion,odto);
                     }
                 }
-
             }
      }
-            return ResponseEntity.ok(surveyService.toSurveyDTO(surveyService.getSurveyById(sdto.getSurveyId())));
+            // 强制刷新数据库，确保最新数据已保存
+            entityManager.flush();
+            entityManager.clear();
+            //ToDo:后续考虑只返回SurveySimpleInfoDTO，减少网络传输开支
+            return ResponseEntity.ok(surveyService.toSurveyDTO(surveyService.getSurveyById(survey.getId())));
         } catch (IllegalArgumentException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
     }
 
@@ -376,4 +381,17 @@ public class SurveyController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+
+
+    // 全局异常处理器，可以捕获验证错误
+//    @ExceptionHandler(MethodArgumentNotValidException.class)
+//    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
+//        List<String> errors = ex.getBindingResult()
+//                .getAllErrors()
+//                .stream()
+//                .map(ObjectError::getDefaultMessage)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.badRequest().body(errors);
+//    }
 }
