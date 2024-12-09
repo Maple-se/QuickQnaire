@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -31,11 +32,11 @@ public class SurveyDTO {
     private Long surveyId;  // 问卷ID
 
     @NotNull(groups = SurveyCreateGroup.class, message = "问卷标题不能为空")
-    @Size(max = 100, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题长度不能超过100个字符")
+    @Size(min = 1,max = 100, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题长度应在1到100个字符之间")
     private String title;  // 问卷标题
 
     @NotNull(groups = SurveyCreateGroup.class, message = "问卷描述不能为空")
-    @Size(max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不能超过200个字符")
+    @Size(min = 1,max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述应在1到200个字符之间")
     private String description;  // 问卷描述
 
     @NotNull(groups = SurveyCreateGroup.class, message = "问卷访问权限不能为空")
@@ -45,6 +46,7 @@ public class SurveyDTO {
 
     private Integer maxResponses;  // 用户自定义的最大响应数
 
+    @Valid
     private List<QuestionDTO> questions;  // 问卷中的问题列表
 }
 

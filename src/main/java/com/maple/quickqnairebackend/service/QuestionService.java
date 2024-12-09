@@ -20,11 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.Validator;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Validated  // 启用方法级验证
@@ -36,28 +34,10 @@ public class QuestionService {
     @Autowired
     private SurveyRepository surveyRepository;
 
-    @Autowired
-    private Validator validator;
-
 
     // 创建新的问题
-    //ToDo:是否应该在这里验证字段以及是否应该在这里抛错有待进一步考虑
     @Transactional
     public Question createQuestion(Long surveyId,QuestionDTO qdto) {
-
-        Set<ConstraintViolation<QuestionDTO>> violations = validator.validate(qdto);
-        if (!violations.isEmpty()) {
-//            Map<String, String> errorMessages = new HashMap<>();
-            // 将验证错误信息添加到 Map 中
-//            for (ConstraintViolation<QuestionDTO> violation : violations) {
-//                errorMessages.put(violation.getPropertyPath().toString(), violation.getMessage());
-//            }
-
-                String errorMessages = violations.stream()
-                    .map(ConstraintViolation::getMessage)
-                    .collect(Collectors.joining(", "));
-            throw new IllegalArgumentException("Validation failed: " + errorMessages);
-        }
         // 查找问卷
         Optional<Survey> surveyOptional = surveyRepository.findById(surveyId);
         if (surveyOptional.isPresent()) {
