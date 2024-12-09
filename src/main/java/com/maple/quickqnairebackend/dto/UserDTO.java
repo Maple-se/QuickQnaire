@@ -11,6 +11,7 @@ import lombok.Setter;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -32,12 +33,12 @@ public class UserDTO {
     @NotNull(groups = UserUpdateGroup.class, message = "用户ID不能为空")
     private Long id;
 
-    @NotNull(groups = UserCreateGroup.class,message = "用户名不能为空")
+    @NotBlank(groups = UserCreateGroup.class,message = "用户名不能为空")
     @Size(min = 3, max = 50, groups = {UserCreateGroup.class,UserUpdateGroup.class},message = "用户名长度必须在3到50之间")
     private String username;
 
 
-    @NotNull(groups = UserCreateGroup.class,message = "密码不能为空")
+    @NotBlank(groups = UserCreateGroup.class,message = "密码不能为空")
     @Size(min = 6, groups = UserCreateGroup.class, message = "密码长度必须不少于6位")
     private String password;
 
@@ -46,8 +47,8 @@ public class UserDTO {
     @Email(groups = {UserCreateGroup.class,UserUpdateGroup.class},message = "邮箱格式不正确")
     private String email;
 
+    //ToDo:枚举类型校验待考虑
     // 用户角色不能为空，只能是 ADMIN 或 USER
-    @Enumerated(EnumType.STRING)
     @NotNull(groups = UserCreateGroup.class,message = "角色不能为空")
     private User.Role role;
 }

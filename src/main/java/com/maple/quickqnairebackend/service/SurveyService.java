@@ -1,10 +1,11 @@
 package com.maple.quickqnairebackend.service;
 
-import com.maple.quickqnairebackend.dto.*;
+import com.maple.quickqnairebackend.dto.SurveyDTO;
+import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
+import com.maple.quickqnairebackend.mapper.SurveyMapper;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by zong chang on 2024/12/1 18:38
@@ -34,6 +34,9 @@ public class SurveyService {
     @Value("${survey.default.duration}")
     private int defaultSurveyDuration;  // 默认持续时间，单位：小时
 
+    @Autowired
+    private SurveyMapper surveyMapper;
+
 
     // 创建新问卷
     @Transactional
@@ -43,11 +46,11 @@ public class SurveyService {
         survey.setDuration(defaultSurveyDuration);
         survey.setCreatedBy(user);  // 设置创建者
         survey.create(); // 设置其他必要字段
-        if(user.getRole().equals(User.Role.ADMIN)){
+        if (user.getRole().equals(User.Role.ADMIN)) {
             survey.approve();
         }
         // 保存 Survey 并返回状态字段 DTO
-         return  surveyToSimpleInfoDTO(surveyRepository.save(survey));
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
 
@@ -77,15 +80,14 @@ public class SurveyService {
     @Transactional
     public Survey updateSurvey(Survey survey, SurveyDTO updatedSurvey) {
         // 更新基本信息
-        if (StringUtils.isNotBlank(updatedSurvey.getTitle())) survey.setTitle(updatedSurvey.getTitle());
-        if (StringUtils.isNotBlank(updatedSurvey.getDescription())) survey.setDescription(updatedSurvey.getDescription());
+        survey.setTitle(updatedSurvey.getTitle());
+        survey.setDescription(updatedSurvey.getDescription());
         if (updatedSurvey.getAccessLevel() != null) survey.setAccessLevel(updatedSurvey.getAccessLevel());
         if (updatedSurvey.getUserSetDuration() != null) survey.setUserSetDuration(updatedSurvey.getUserSetDuration());
         if (updatedSurvey.getMaxResponses() != null) survey.setMaxResponses(updatedSurvey.getMaxResponses());
 
-       return surveyRepository.save(survey);
+        return surveyRepository.save(survey);
     }
-
 
 
     // 删除问卷
@@ -116,7 +118,7 @@ public class SurveyService {
     // 检查问卷是否应当结束
     //ToDo:待考虑
     public boolean isSurveyshouldClose(Long surveyId) {
-        if(isSurveyClosed(surveyId)){
+        if (isSurveyClosed(surveyId)) {
             return false;
         }
         Survey survey = surveyRepository.findById(surveyId)
@@ -183,7 +185,7 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.submit();
-       return surveyToSimpleInfoDTO(surveyRepository.save(survey)) ;
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
     // 管理员批准问卷
@@ -192,7 +194,7 @@ public class SurveyService {
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> new IllegalArgumentException("Survey_Found_Error"));
         survey.approve();
-      return surveyToSimpleInfoDTO(surveyRepository.save(survey));
+        return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
     // 管理员拒绝问卷
@@ -230,63 +232,16 @@ public class SurveyService {
         }
     }
 
-    //ToDo:计划使用MapStruct重构
-    public SurveyDTO toSurveyDTO(Survey survey){
-
-        SurveyDTO surveyDTO = new SurveyDTO();
-        surveyDTO.setSurveyId(survey.getId());
-        surveyDTO.setTitle(survey.getTitle());
-        surveyDTO.setDescription(survey.getDescription());
-        //
-        surveyDTO.setAccessLevel(survey.getAccessLevel());
-        surveyDTO.setUserSetDuration(survey.getUserSetDuration());
-        surveyDTO.setMaxResponses(survey.getMaxResponses());
-
-        // 设置问题和选项
-        List<QuestionDTO> questionDTOList = survey.getQuestions().stream().map(question -> {
-            QuestionDTO questionDTO = new QuestionDTO();
-            questionDTO.setQuestionId(question.getId());
-            questionDTO.setQuestionContent(question.getQuestionContent());
-            questionDTO.setQuestionType(question.getType());
-            questionDTO.setRequired(question.getRequired());
-
-            // 设置选项
-           // if(question.getOptions()!=null) {
-                List<OptionDTO> options = question.getOptions().stream().map(option -> {
-                    OptionDTO optionDTO = new OptionDTO();
-                    optionDTO.setOptionId(option.getId());
-                    optionDTO.setOptionContent(option.getOptionContent());
-                    return optionDTO;
-                }).collect(Collectors.toList());
-
-                questionDTO.setOptions(options);
-           // }
-
-            return questionDTO;
-        }).collect(Collectors.toList());
-
-      surveyDTO.setQuestions(questionDTOList);
-      return surveyDTO;
+    public SurveyDTO toSurveyDTO(Survey survey) {
+        return surveyMapper.toSurveyDTO(survey);
     }
 
-    //Surveys到SurveyDTO的转换
-    private List<SurveySimpleInfoDTO> surveysToSimpleInfoDTO(List<Survey> surveys) {
-        return surveys
-                .stream()
-                .map(this::surveyToSimpleInfoDTO)
-                .collect(Collectors.toList());
+    public SurveySimpleInfoDTO surveyToSimpleInfoDTO(Survey survey) {
+        return surveyMapper.surveyToSimpleInfoDTO(survey);
     }
 
-    // Survey到SurveyDTO的转换
-    private SurveySimpleInfoDTO surveyToSimpleInfoDTO(Survey survey) {
-        return new SurveySimpleInfoDTO(
-                survey.getId(),
-                survey.getTitle(),
-                survey.getDescription(),
-                survey.getStatus(),
-                survey.getAccessLevel(),
-                survey.getUpdatedAt()
-        );
+    public List<SurveySimpleInfoDTO> surveysToSimpleInfoDTO(List<Survey> surveys) {
+        return surveyMapper.surveysToSimpleInfoDTO(surveys);
     }
 }
 

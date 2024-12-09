@@ -16,4 +16,7 @@ import java.util.List;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findBySurveyId(Long surveyId);
+
+    // 判断特定 Survey 中是否存在指定问题
+    boolean existsByIdAndSurveyId(Long questionId, Long surveyId);
 }

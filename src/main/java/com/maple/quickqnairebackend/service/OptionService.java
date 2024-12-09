@@ -26,6 +26,10 @@ import java.util.Optional;
 public class OptionService {
 
     @Autowired
+    private EntityManager entityManager;
+
+
+    @Autowired
     private OptionRepository optionRepository;
 
     @Autowired
@@ -54,21 +58,27 @@ public class OptionService {
 
     // 处理选项列表
     @Transactional
-    public void processOption(Question question ,OptionDTO optionDTO) {
+    public void processOption(Long questionId ,OptionDTO optionDTO) {
 
-        //QuestionOption updatedOption = new QuestionOption();
             if (optionDTO.getOptionId() != null) {
-                // 更新现有选项
-                QuestionOption existingOption = getOptionById(optionDTO.getOptionId());
-                if (existingOption != null) {
+                // 使用 existsBy 来判断问题是否存在于该 Survey 中
+                boolean exists = optionRepository.existsByIdAndQuestionId(optionDTO.getOptionId(), questionId);
+
+                if (exists) {
+                    // 如果存在，更新问题
+                    QuestionOption existingOption = getOptionById(optionDTO.getOptionId());
                     updateOption(existingOption, optionDTO);
                 } else {
-                    throw new IllegalArgumentException("Option ID " + optionDTO.getOptionId() + " not found");
+                    // 如果不存在，抛出异常
+                    throw new IllegalArgumentException("Option ID " + optionDTO.getOptionId() + " not found in this question");
                 }
             } else {
                 // 新增选项
-               createOption(question.getId(), optionDTO);
+               createOption(questionId, optionDTO);
             }
+            //强刷数据库，确保最新数据已保存
+            entityManager.flush();
+            entityManager.clear();
     }
 
     // 更新选项

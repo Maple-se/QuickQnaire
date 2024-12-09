@@ -20,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Objects;
 
 /**
  * Created by zong chang on 2024/12/1 16:31
@@ -79,7 +80,7 @@ public class UserController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
-            if(updatedUser.getId() != userId){
+            if(!Objects.equals(updatedUser.getId(), userId)){
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User Identity Error");
             }
             User preUser = userService.getUserById(userId);

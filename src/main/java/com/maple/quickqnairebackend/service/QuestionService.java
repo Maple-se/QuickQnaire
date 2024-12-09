@@ -14,19 +14,21 @@ import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Validated  // 启用方法级验证
 public class QuestionService {
+
+    @Autowired
+    private EntityManager entityManager;
+
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -55,7 +57,7 @@ public class QuestionService {
     private Question toEntity(QuestionDTO dto) {
         Question question = new Question();
         question.setQuestionContent(dto.getQuestionContent());
-        question.setType(dto.getQuestionType());
+        question.setType(dto.getType());
         question.setRequired(dto.getRequired());
         //已解决
 //        if(dto.getQuestionType()== Question.QuestionType.TEXT){
@@ -68,21 +70,28 @@ public class QuestionService {
 
     // 处理问题列表
     @Transactional
-    public Question processQuestion(Survey survey, QuestionDTO questionDTO) {
+    public Question processQuestion(Long surveyId, QuestionDTO questionDTO) {
         Question updatedQuestion = new Question();
         // 处理请求中的问题
             if (questionDTO.getQuestionId() != null) {
-                // 更新现有问题
-                Question existingQuestion = getQuestionById(questionDTO.getQuestionId());
-                if (existingQuestion != null) {
-                  updatedQuestion = updateQuestion(existingQuestion, questionDTO);
+                // 使用 existsBy 来判断问题是否存在于该 Survey 中
+                boolean exists = questionRepository.existsByIdAndSurveyId(questionDTO.getQuestionId(), surveyId);
+
+                if (exists) {
+                    // 如果存在，更新问题
+                    Question existingQuestion = getQuestionById(questionDTO.getQuestionId());
+                    updatedQuestion = updateQuestion(existingQuestion, questionDTO);
                 } else {
-                    throw new IllegalArgumentException("Question ID " + questionDTO.getQuestionId() + " not found");
+                    // 如果不存在，抛出异常
+                    throw new IllegalArgumentException("Question ID " + questionDTO.getQuestionId() + " not found in this survey");
                 }
             } else {
                 // 新增问题
-                updatedQuestion = createQuestion(survey.getId(), questionDTO);
+                updatedQuestion = createQuestion(surveyId, questionDTO);
             }
+            //强刷数据库，确保最新数据已保存
+            entityManager.flush();
+            entityManager.clear();
             return updatedQuestion;
     }
 
@@ -90,7 +99,7 @@ public class QuestionService {
     // 更新问题
     @Transactional
     public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
-        if (StringUtils.isNotBlank(questionUpdateDTO.getQuestionContent())) question.setQuestionContent(questionUpdateDTO.getQuestionContent());
+        question.setQuestionContent(questionUpdateDTO.getQuestionContent());
         //要么删、要么增、问题类型不必变更
         //if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
         if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());

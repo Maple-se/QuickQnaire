@@ -1,8 +1,10 @@
 package com.maple.quickqnairebackend.controller;
 
-import com.maple.quickqnairebackend.dto.*;
+import com.maple.quickqnairebackend.dto.OptionDTO;
+import com.maple.quickqnairebackend.dto.QuestionDTO;
+import com.maple.quickqnairebackend.dto.SurveyDTO;
+import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
 import com.maple.quickqnairebackend.entity.Question;
-import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.OptionService;
@@ -18,16 +20,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityManager;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by zong chang on 2024/12/1 20:04
@@ -39,9 +37,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/quickqnaire")
 public class SurveyController {
-
-    @Autowired
-    private EntityManager entityManager;
 
     @Autowired
     private SurveyService surveyService;
@@ -57,33 +52,33 @@ public class SurveyController {
 
     //创建问卷
     //创建问卷API测试通过
+    //ToDo:后续考虑实现自定义校验错误处理器
+    @Transactional
     @PostMapping("/create")
-    public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO){
-        try{
+    public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
+        try {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
-            SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.createSurvey(surveyCreationDTO,userId);
-            for (QuestionDTO qdto: surveyCreationDTO.getQuestions()) {
-                Question createdQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(),qdto);
+            SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.createSurvey(surveyCreationDTO, userId);
+            for (QuestionDTO qdto : surveyCreationDTO.getQuestions()) {
+                Question createdQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(), qdto);
                 // 根据问题类型，创建选项（如果是单选或多选类型）
-                if (qdto.getQuestionType() == Question.QuestionType.SINGLE_CHOICE || qdto.getQuestionType() == Question.QuestionType.MULTIPLE_CHOICE) {
-                    for (OptionDTO odto: qdto.getOptions()) {
-                        optionService.createOption(createdQuestion.getId(),odto);
+                if (qdto.getType() == Question.QuestionType.SINGLE_CHOICE || qdto.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
+                    for (OptionDTO odto : qdto.getOptions()) {
+                        optionService.createOption(createdQuestion.getId(), odto);
                     }
                 }
             }
             return ResponseEntity.ok(surveySimpleInfoDTO);
-        }catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Create Survey Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
     }
 
 
     @GetMapping("/preview/{encodedSurveyId}")
-    public ResponseEntity<?> previewSurvey(@PathVariable String encodedSurveyId){
+    public ResponseEntity<?> previewSurvey(@PathVariable String encodedSurveyId) {
         // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
@@ -94,106 +89,89 @@ public class SurveyController {
         try {
             surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
         } catch (NumberFormatException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
+            throw new IllegalArgumentException("Invalid survey ID format.");
         }
         // 根据解码后的 surveyId 获取问卷
         Survey survey = surveyService.getSurveyById(surveyId);
         //问卷创建者才可以更新
-        surveyService.validateSurveyOwnership(survey,user);
+        surveyService.validateSurveyOwnership(survey, user);
         return ResponseEntity.ok(surveyService.toSurveyDTO(survey));
     }
 
     //更新问卷
-    //ToDo:更新逻辑暂时测试通过，错误处理需要进一步考虑
-    //ToDo:是否应该在Controller层加事务注解？
     @Transactional
     @PutMapping("/update-survey")
-    public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto){
-        try {
-            // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
-            User user = userService.getUserById(userId);
-            // 根据解码后的 surveyId 获取问卷
-            Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
+    public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto) {
+        //try {
+        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
+        User user = userService.getUserById(userId);
 
-            //问卷创建者才可以更新
-            surveyService.validateSurveyOwnership(survey,user);
-            //草稿状态才可以更新
-            surveyService.isDraftStatus(survey);
-            //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
-            Survey updatedSurvey = surveyService.updateSurvey(survey,sdto);
+        // 根据解码后的 surveyId 获取问卷
+        Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
 
-            // 处理问题列表
-            if(sdto.getQuestions() != null){
+        //问卷创建者才可以更新
+        surveyService.validateSurveyOwnership(survey, user);
+        //草稿状态才可以更新
+        surveyService.isDraftStatus(survey);
+        //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
+        Survey updatedSurvey = surveyService.updateSurvey(survey, sdto);
+
+        // 处理问题列表
+        if (sdto.getQuestions() != null) {
             // 更新问题列表
             for (QuestionDTO questionDTO : sdto.getQuestions()) {
-               Question updatedQuestion= questionService.processQuestion(updatedSurvey, questionDTO);
-                if (questionDTO.getQuestionType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getQuestionType() == Question.QuestionType.MULTIPLE_CHOICE) {
-                    for (OptionDTO odto: questionDTO.getOptions()) {
-                      optionService.processOption(updatedQuestion,odto);
+                Question updatedQuestion = questionService.processQuestion(updatedSurvey.getId(), questionDTO);
+                if (questionDTO.getType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
+                    for (OptionDTO odto : questionDTO.getOptions()) {
+                        optionService.processOption(updatedQuestion.getId(), odto);
                     }
                 }
             }
-     }
-            // 强制刷新数据库，确保最新数据已保存
-            entityManager.flush();
-            entityManager.clear();
-            //ToDo:后续考虑只返回SurveySimpleInfoDTO，减少网络传输开支
-            return ResponseEntity.ok(surveyService.toSurveyDTO(surveyService.getSurveyById(survey.getId())));
-        } catch (IllegalArgumentException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+        return ResponseEntity.ok(surveyService.surveyToSimpleInfoDTO(surveyService.getSurveyById(updatedSurvey.getId())));
     }
 
 
     //用户提交问卷，管理员审批
     //API测试通过
     @PutMapping("/submit-for-approval/{encodedSurveyId}")
-    public ResponseEntity<?> submitSurveyForApproval( @PathVariable String encodedSurveyId){
-       try {
-           // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
-           Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-           Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
-           User user = userService.getUserById(userId);
-           // 解码 Base64 编码的 surveyId
-           String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
-           Long surveyId;
-           try {
-               surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
-           } catch (NumberFormatException e) {
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
-           }
-           // 根据解码后的 surveyId 获取问卷
-           Survey survey = surveyService.getSurveyById(surveyId);
-           if(survey.getCreatedBy()!=user){
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
-           }
-           if(survey.getStatus() != Survey.SurveyStatus.DRAFT){
-               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
-           }
-         SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.submitSurveyForApproval(survey.getId());
-           return ResponseEntity.ok(surveySimpleInfoDTO);
-       }catch (IllegalArgumentException e){
-           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-       }
+    public ResponseEntity<?> submitSurveyForApproval(@PathVariable String encodedSurveyId) {
+        try {
+            // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
+            User user = userService.getUserById(userId);
+            // 解码 Base64 编码的 surveyId
+            String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+            Long surveyId;
+            try {
+                surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+            } catch (NumberFormatException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
+            }
+            // 根据解码后的 surveyId 获取问卷
+            Survey survey = surveyService.getSurveyById(surveyId);
+            if (survey.getCreatedBy() != user) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
+            }
+            if (survey.getStatus() != Survey.SurveyStatus.DRAFT) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
+            }
+            SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.submitSurveyForApproval(survey.getId());
+            return ResponseEntity.ok(surveySimpleInfoDTO);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
-
-    @PreAuthorize("hasRole('USER')")
-    @GetMapping("/api/test")
-    public ResponseEntity<Void> test(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        authentication.getAuthorities().forEach(authority -> System.out.println("Authority: " + authority.getAuthority()));
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
 
     //ToDo:问卷状态变更存在冗余代码
     //管理员批准问卷，状态变为active
     //API测试通过
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/approval-survey/{encodedSurveyId}")
-    public ResponseEntity<?> approvalSurvey(@PathVariable String encodedSurveyId){
+    public ResponseEntity<?> approvalSurvey(@PathVariable String encodedSurveyId) {
         try {
             // 解码 Base64 编码的 surveyId
             String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
@@ -206,12 +184,12 @@ public class SurveyController {
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(surveyId);
 
-            if(survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL){
+            if (survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
             }
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.approveSurvey(survey.getId());
             return ResponseEntity.ok(surveySimpleInfoDTO);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -220,7 +198,7 @@ public class SurveyController {
     //API测试通过
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/reject-survey/{encodedSurveyId}")
-    public ResponseEntity<?> rejectSurvey(@PathVariable String encodedSurveyId){
+    public ResponseEntity<?> rejectSurvey(@PathVariable String encodedSurveyId) {
         try {
             // 解码 Base64 编码的 surveyId
             String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
@@ -233,22 +211,21 @@ public class SurveyController {
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(surveyId);
 
-            if(survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL){
+            if (survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
             }
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.rejectSurvey(survey.getId());
             return ResponseEntity.ok(surveySimpleInfoDTO);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
 
-
     //管理员或用户，手动关闭问卷
     //API测试通过
     @PutMapping("/close-survey/{encodedSurveyId}")
-    public ResponseEntity<?> closeSurvey(@PathVariable String encodedSurveyId){
+    public ResponseEntity<?> closeSurvey(@PathVariable String encodedSurveyId) {
         try {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -265,15 +242,15 @@ public class SurveyController {
             }
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(surveyId);
-            if(survey.getCreatedBy()!=user && user.getRole() != User.Role.ADMIN){
+            if (survey.getCreatedBy() != user && user.getRole() != User.Role.ADMIN) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
             }
-            if(survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL && survey.getStatus() != Survey.SurveyStatus.ACTIVE){
+            if (survey.getStatus() != Survey.SurveyStatus.PENDING_APPROVAL && survey.getStatus() != Survey.SurveyStatus.ACTIVE) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
             }
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.closeSurvey(survey.getId());
             return ResponseEntity.ok(surveySimpleInfoDTO);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -282,7 +259,7 @@ public class SurveyController {
     //删除问卷
     //API测试通过
     @DeleteMapping("/delete-survey/{encodedSurveyId}")
-    public ResponseEntity<?> deleteSurvey(@PathVariable String encodedSurveyId){
+    public ResponseEntity<?> deleteSurvey(@PathVariable String encodedSurveyId) {
         try {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -298,12 +275,12 @@ public class SurveyController {
             }
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(surveyId);
-            if(survey.getCreatedBy()!=user && user.getRole() != User.Role.ADMIN){
+            if (survey.getCreatedBy() != user && user.getRole() != User.Role.ADMIN) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
             }
             surveyService.deleteSurvey(survey.getId());
             return ResponseEntity.status(HttpStatus.FOUND).body("Delete Success");  // 删除成功，返回204 No Content
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // 问卷不存在
         } catch (Exception e) {
             // 处理其他可能的异常
@@ -321,7 +298,7 @@ public class SurveyController {
             Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
             List<SurveySimpleInfoDTO> surveySimpleInfoDTOS = surveyService.getSurveysByUserId(userId);
             return ResponseEntity.ok(surveySimpleInfoDTOS);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Get Surveys By UserId Error");
         }
     }
@@ -345,13 +322,13 @@ public class SurveyController {
 
             // 根据解码后的 surveyId 获取问卷
             Survey survey = surveyService.getSurveyById(surveyId);
-            if(survey.getStatus()!=Survey.SurveyStatus.ACTIVE){
+            if (survey.getStatus() != Survey.SurveyStatus.ACTIVE) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Survey Status Error");
             }
 
             //检查用户是否登录，若未登录，则返回登录页面
             //Survey.AccessLevel.PRIVATE该访问级别要求已经登录用户填写
-            if(survey.getAccessLevel() == Survey.AccessLevel.PRIVATE){
+            if (survey.getAccessLevel() == Survey.AccessLevel.PRIVATE) {
                 // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 // 判断是否有有效的认证信息
@@ -366,7 +343,7 @@ public class SurveyController {
 
             //ToDo:考虑不在这里实现，将在新方法里单独实现
             //Survey.AccessLevel.RESTRICTED 该访问级别要求特定用户填写
-            if(survey.getAccessLevel() == Survey.AccessLevel.RESTRICTED){
+            if (survey.getAccessLevel() == Survey.AccessLevel.RESTRICTED) {
 
             }
             SurveyDTO surveyDTO = surveyService.toSurveyDTO(survey);
@@ -381,17 +358,4 @@ public class SurveyController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-
-
-
-    // 全局异常处理器，可以捕获验证错误
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
-//        List<String> errors = ex.getBindingResult()
-//                .getAllErrors()
-//                .stream()
-//                .map(ObjectError::getDefaultMessage)
-//                .collect(Collectors.toList());
-//        return ResponseEntity.badRequest().body(errors);
-//    }
 }

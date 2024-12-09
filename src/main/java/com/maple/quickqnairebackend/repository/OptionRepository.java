@@ -16,4 +16,7 @@ import java.util.List;
 @Repository
 public interface OptionRepository extends JpaRepository<QuestionOption, Long> {
     List<QuestionOption> findByQuestionId(Long questionId);
+
+    // 判断特定 Question 中是否存在指定选项
+    boolean existsByIdAndQuestionId(Long optionId, Long questionId);
 }
