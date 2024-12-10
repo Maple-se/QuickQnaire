@@ -118,6 +118,11 @@ public class QuestionService {
         }
     }
 
+    //判断特定 Survey 中是否存在指定问题
+    public boolean IsQuestionExistInSurvey(Long questionId, Long surveyId){
+        return questionRepository.existsByIdAndSurveyId(questionId,surveyId);
+    }
+
     // 获取所有问题
     public List<Question> getAllQuestions() {
         return questionRepository.findAll();

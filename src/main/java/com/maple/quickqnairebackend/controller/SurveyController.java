@@ -53,6 +53,7 @@ public class SurveyController {
     //创建问卷
     //创建问卷API测试通过
     //ToDo:后续考虑实现自定义校验错误处理器
+    //ToDo:and DTO to entity need to be reconstruct
     @Transactional
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
@@ -260,7 +261,6 @@ public class SurveyController {
     //API测试通过
     @DeleteMapping("/delete-survey/{encodedSurveyId}")
     public ResponseEntity<?> deleteSurvey(@PathVariable String encodedSurveyId) {
-        try {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 use
@@ -279,19 +279,81 @@ public class SurveyController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User Identity Error");
             }
             surveyService.deleteSurvey(survey.getId());
-            return ResponseEntity.status(HttpStatus.FOUND).body("Delete Success");  // 删除成功，返回204 No Content
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // 问卷不存在
-        } catch (Exception e) {
-            // 处理其他可能的异常
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            return ResponseEntity.noContent().build();  // 返回 204 No Content 状态码
     }
 
 
+    // 删除问题
+    //API测试通过，删除逻辑暂无问题
+    // ToDo:需要考虑整个Controller层架构设计问题，
+    //  包括：使用 @PreAuthorize 或 @Secured 实现权限控制以及Base64解码验证逻辑，过于冗余
+    @DeleteMapping("/delete-question/{encodedSurveyId}")
+    public ResponseEntity<String> deleteQuestion(@PathVariable String encodedSurveyId, @RequestParam Long questionId) {
+        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 use
+        User user = userService.getUserById(userId);
+        // 解码 Base64 编码的 surveyId
+        String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+        Long surveyId;
+        try {
+            surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
+        }
+        // 根据解码后的 surveyId 获取问卷
+        Survey survey = surveyService.getSurveyById(surveyId);
+        surveyService.isDraftStatus(survey);
+        if (!survey.getCreatedBy().equals(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission to delete this question.");
+        }
+        // 删除问题
+        boolean exists = questionService.IsQuestionExistInSurvey(questionId, surveyId);
+        if (!exists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Question ID " + questionId + " not found in this survey");
+        }
+        questionService.deleteQuestion(questionId);
+        // 返回成功响应
+        return ResponseEntity.noContent().build();  // 返回 204 No Content 状态码
+    }
+
+
+    //问题选项删除逻辑
+    //API测试通过
+    //ToDo:有待进一步优化逻辑以及实现选项的批量删除
+    @DeleteMapping("/delete-option/{encodedSurveyId}")
+    public ResponseEntity<String> deleteOption(@PathVariable String encodedSurveyId, @RequestParam Long questionId, @RequestParam Long optionId) {
+        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 use
+        User user = userService.getUserById(userId);
+        // 解码 Base64 编码的 surveyId
+        String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+        Long surveyId;
+        try {
+            surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid survey ID format.");
+        }
+        // 根据解码后的 surveyId 获取问卷
+        Survey survey = surveyService.getSurveyById(surveyId);
+        surveyService.isDraftStatus(survey);
+        if (!survey.getCreatedBy().equals(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission to delete this question.");
+        }
+        // 删除问题
+        boolean exists = optionService.IsOptionExistInQuestion(optionId,questionId);
+        if (!exists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Option ID " + optionId + " not found in this question");
+        }
+        optionService.deleteOption(optionId);
+        // 返回成功响应
+        return ResponseEntity.noContent().build();  // 返回 204 No Content 状态码
+    }
+
     // 根据用户ID获取所有问卷
     @GetMapping("/surveys")
-    public ResponseEntity<?> getSurveysByUserId() {
+    public ResponseEntity<?> getSurveysByUser() {
         try {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -31,18 +31,7 @@ public class SurveyResultController {
     // 提交问卷结果
     //ToDo:问卷结果提交待检查
     @PostMapping("/submit-survey")
-    public ResponseEntity<?> submitSurveyResult(@RequestHeader(value = "Authorization", required = false) String authorization,
-                                                           @RequestBody SurveyResultDTO surveyResultDTO) {
-        String token = null;
-        if (authorization != null) {
-            token = authorization.replace("Bearer ", ""); // 如果有 token，去除前缀
-        }
-
-        if (token != null) {
-            Long userId = JwtTokenUtil.extractUserId(token);  // 从 token 中提取用户 ID
-            User user = userService.getUserById(userId);
-            //surveyResult.setUser(user);  // 将用户关联到问卷结果
-        }
+    public ResponseEntity<?> submitSurveyResult(@RequestBody SurveyResultDTO surveyResultDTO) {
 
         // 保存 SurveyResult，JPA 会自动调用 @PrePersist 方法
         //SurveyResult savedSurveyResult = surveyResultService.saveSurveyResult(surveyResult);

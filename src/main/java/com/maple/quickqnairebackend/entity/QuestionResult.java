@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -35,8 +36,17 @@ public class QuestionResult {
     @JsonBackReference
     private Question question;  // 关联的 Question
 
+    // 单选题或多选题的选项结果（存储选项的ID）
+    @ElementCollection
+    @CollectionTable(name = "question_result_options", joinColumns = @JoinColumn(name = "question_result_id"))
+    @Column(name = "option_id")
+    private Set<Long> selectedOptionIds;  // 对于单选和多选问题，存储选中的选项ID
+
+    @Column(columnDefinition = "TEXT")
+    private String textAnswer;  // 对于文本问题，存储文本答案
+
     @Column(nullable = false)
-    private String answer;  // 问题的答案，类型可以根据需要调整
+    private Boolean requiredAnswered;  // 记录是否回答了该问题
 
 }
 

@@ -7,33 +7,17 @@ package com.maple.quickqnairebackend.dto;
  * @version : 1.0
  * @description :
  */
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SurveyResultDTO {
 
-    private Long surveyId;  // 问卷ID
-    private Long userId;    // 用户ID
+    private Long surveyId;  // 关联的 Survey 的 ID
+    private Long userId;  // 关联的 User 的 ID，匿名用户可以为空
+    private List<QuestionResultDTO> questionResults;  // 用户填写的所有问题答案列表
 
-    private List<QuestionResponseDTO> questionResponses;  // 问题和对应的答案列表
-
-    // 内部类：问题的答案
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class QuestionResponseDTO {
-        private Long questionId;  // 问题ID
-        private String questionContent;  // 问题内容
-
-        private List<String> answers;  // 用户的答案：可以是文本、选项值等
-    }
 }

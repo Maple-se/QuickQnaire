@@ -56,6 +56,11 @@ public class OptionService {
         return questionOption;
     }
 
+    //判断特定 Question 中是否存在指定选项
+    public boolean IsOptionExistInQuestion(Long optionId, Long questionId){
+        return optionRepository.existsByIdAndQuestionId(optionId,questionId);
+    }
+
     // 处理选项列表
     @Transactional
     public void processOption(Long questionId ,OptionDTO optionDTO) {
