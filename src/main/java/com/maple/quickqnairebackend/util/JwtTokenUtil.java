@@ -1,13 +1,15 @@
 package com.maple.quickqnairebackend.util;
 
+import com.maple.quickqnairebackend.config.JwtConfiguration;
+import com.maple.quickqnairebackend.dto.CustomUserDetails;
 import com.maple.quickqnairebackend.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import javax.servlet.http.HttpServletRequest;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
@@ -24,6 +26,7 @@ import java.util.UUID;
  * @description :
  */
 @Component
+@RequiredArgsConstructor
 public class JwtTokenUtil {
 
 //    注册的声明（建议但不强制使用）：
@@ -37,7 +40,13 @@ public class JwtTokenUtil {
 
 
     //private static final String SECRET_KEY = "your_secret_key";
-    private static final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
+    private static final long EXPIRATION_TIME = 86400; // 1 day in milliseconds
+
+    private static final String USER_NAME = "username";
+    private static final String USER_ID = "userId";
+    private static final String ROLE = "role";
+
+    private final JwtConfiguration jwtConfiguration;
 
     /**
      * 加密算法
@@ -60,34 +69,39 @@ public class JwtTokenUtil {
     private final static String JWT_ISS = "Maple";
 
     // 生成 JWT Token
-    public static String generateToken(User user) {
+    public String generateToken(Authentication authentication) {
         // 令牌id
         String uuid = UUID.randomUUID().toString();
         Date exprireDate = Date.from(Instant.now().plusSeconds(EXPIRATION_TIME));
-        //UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        // 将角色转换为 "ROLE_ADMIN" 形式
-        String roleWithPrefix = "ROLE_" + user.getRole();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         return Jwts.builder()
                 .header()
                 .add("typ", "JWT")
                 .add("alg", "HS256")
                 .and()
-                .claim("userId", user.getId())  // 将用户 ID 放入 payload
-                .claim("role", roleWithPrefix)  // 将角色信息加入 token
+                .claim(USER_NAME,userDetails.getUsername())
+                .claim(USER_ID, userDetails.getUserId())  // 将用户 ID 放入 payload
+                .claim(ROLE, userDetails.getAuthorities())  // 将角色信息加入 token
                 .id(uuid)
                 .expiration(exprireDate)
                 .issuedAt(new Date())
-                .subject(user.getUsername())
                 .issuer(JWT_ISS)
                 .signWith(KEY,ALGORITHM)
                 .compact();
     }
 
-    // 验证 Token 是否有效
-    public static boolean validateToken(String token) {
+
+    /**
+     * 判断 token 是否过期
+     *
+     * @param token 令牌
+     * @return 是否过期
+     */
+    public boolean isTokenValid(String token) {
         try {
-            return !parsePayload(token).getExpiration().before(new Date());
+            System.out.println(parseTokenPayload(token).getExpiration());
+            return !parseTokenPayload(token).getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }
@@ -97,32 +111,39 @@ public class JwtTokenUtil {
      * @param token token
      * @return Jws<Claims>
      */
-    public static Jws<Claims> getClaims(String token) {
+    private Claims parseTokenPayload(String token) {
         return Jwts.parser()
                 .verifyWith(KEY)  // 验证签名密钥
                 .build()
-                .parseSignedClaims(token);// 解析 Token;
+                .parseSignedClaims(token)
+                .getPayload();// 解析 Token;
     }
 
     // 获取用户角色
-    public static String extractRole(String token) {
-        Claims claims = parsePayload(token);
-        return claims.get("role", String.class);  // 获取角色
+    public String extractRole(String token) {
+        Claims claims = parseTokenPayload(token);
+        return claims.get(ROLE, String.class);  // 获取角色
     }
 
     // 获取用户 ID
-    public static Long extractUserId(String token) {
-        Claims claims = parsePayload(token);
-        return claims.get("userId", Long.class);  // 获取用户 ID
+    public Long extractUserId(String token) {
+        Claims claims = parseTokenPayload(token);
+        return claims.get(USER_ID, Long.class);  // 获取用户 ID
     }
 
-    public static JwsHeader parseHeader(String token) {
-        return getClaims(token).getHeader();
-    }
-
-    // 返回 Claims（有效载荷）
-    public static Claims parsePayload(String token) {
-        return getClaims(token).getPayload();
+    /**
+     * 去除 Token 前缀
+     *
+     * @param request 原始 Token
+     * @return 去除前缀后的 Token
+     */
+    public String removeTokenPrefix(HttpServletRequest request) {
+        // 1. http 请求处理
+        String token = request.getHeader(jwtConfiguration.getRequestHeaderKey());
+        if (token != null && token.startsWith(jwtConfiguration.getTokenPrefix())) {
+            return token.substring(jwtConfiguration.getTokenPrefix().length());
+        }
+        return null;
     }
 }
 

@@ -42,20 +42,20 @@ public class SurveyResultController {
 
 
     // 获取用户已提交的问卷结果
-    @GetMapping("/get")
-    public ResponseEntity<SurveyResult> getSurveyResult(@RequestParam Long surveyId,
-                                                        @RequestHeader("Authorization") String authorization) {
-        String token = authorization.replace("Bearer ", "");
-        Long userId = JwtTokenUtil.extractUserId(token);
-
-        // 获取问卷结果
-        SurveyResult surveyResult = surveyResultService.getSurveyResult(surveyId, userId);
-        if (surveyResult != null) {
-            return ResponseEntity.ok(surveyResult);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @GetMapping("/get")
+//    public ResponseEntity<SurveyResult> getSurveyResult(@RequestParam Long surveyId,
+//                                                        @RequestHeader("Authorization") String authorization) {
+//        String token = authorization.replace("Bearer ", "");
+//        Long userId = JwtTokenUtil.extractUserId(token);
+//
+//        // 获取问卷结果
+//        SurveyResult surveyResult = surveyResultService.getSurveyResult(surveyId, userId);
+//        if (surveyResult != null) {
+//            return ResponseEntity.ok(surveyResult);
+//        } else {
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 
     // 获取匿名用户的问卷结果
 //    @GetMapping("/getAnonymous")

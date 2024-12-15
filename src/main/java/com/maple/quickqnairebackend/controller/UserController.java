@@ -1,5 +1,6 @@
 package com.maple.quickqnairebackend.controller;
 
+import com.maple.quickqnairebackend.dto.CustomUserDetails;
 import com.maple.quickqnairebackend.dto.LoginRequest;
 import com.maple.quickqnairebackend.dto.LoginResponse;
 import com.maple.quickqnairebackend.dto.UserDTO;
@@ -8,6 +9,7 @@ import com.maple.quickqnairebackend.service.UserService;
 import com.maple.quickqnairebackend.util.JwtTokenUtil;
 import com.maple.quickqnairebackend.validation.UserCreateGroup;
 import com.maple.quickqnairebackend.validation.UserUpdateGroup;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,17 +33,16 @@ import java.util.Objects;
  * @description :
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/quickqnaire")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
 
-//    @Autowired
-//    private JwtTokenUtil jwtTokenUtil;
+    private final UserService userService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+
+    private final JwtTokenUtil jwtTokenUtil;
 
     // 注册接口：用户创建
     @PostMapping("/register")
@@ -59,15 +61,10 @@ public class UserController {
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
             // 使用 AuthenticationManager 进行身份验证
-            Authentication authentication = authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
-
-            User user = userService.getUserByUsername(loginRequest.getUsername());
-
-            // 生成 JWT Token
-            String token = JwtTokenUtil.generateToken(user);
+            Authentication authentication = authenticateUser(loginRequest);
 
             // 返回包含 token 和用户角色的响应
-            return ResponseEntity.ok(new LoginResponse(token, "login successfully"));
+            return ResponseEntity.ok(new LoginResponse(jwtTokenUtil.generateToken(authentication), "login successfully"));
 
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
@@ -98,9 +95,9 @@ public class UserController {
     //ToDo:登出接口：待考虑
 
     // 用户名和密码验证
-    private Authentication authenticateUser(String username, String password) {
+    private Authentication authenticateUser(LoginRequest loginRequest) {
         return authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
     }
 

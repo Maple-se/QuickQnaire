@@ -8,14 +8,20 @@ package com.maple.quickqnairebackend.service;
  * @description :
  */
 
+import com.maple.quickqnairebackend.dto.CustomUserDetails;
 import com.maple.quickqnairebackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import com.maple.quickqnairebackend.entity.User;
+import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,16 +33,25 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // 查询用户信息，这里以一个简单的 UserRepository 为例
-        Optional<com.maple.quickqnairebackend.entity.User> userEntity = userRepository.findByUsername(username);  // 假设你有一个 UserEntity 类
+        Optional<User> userEntity = userRepository.findByUsername(username);  // 假设你有一个 UserEntity 类
 
         if (!userEntity.isPresent()) {
             throw new UsernameNotFoundException("User not found");
         }
+
+        // 获取用户角色，假设 roles 是一个字符串数组
+        String[] roles = new String[]{String.valueOf(userEntity.get().getRole())};  // 获取角色
+
         // 构造 UserDetails，返回给 Spring Security
-        return User.builder()
+        return CustomUserDetails.builder()
                 .username(userEntity.get().getUsername())
                 .password(userEntity.get().getPassword())
-                .roles(String.valueOf(userEntity.get().getRole()))  // 假设 roles 是一个字符串数组
+                .userId(userEntity.get().getId())
+                .roles(roles)
+                .credentialsNonExpired(true)
+                .enabled(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)
                 .build();
     }
 }
