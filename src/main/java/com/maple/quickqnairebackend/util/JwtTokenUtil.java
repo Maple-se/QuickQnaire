@@ -2,7 +2,7 @@ package com.maple.quickqnairebackend.util;
 
 import com.maple.quickqnairebackend.config.JwtConfiguration;
 import com.maple.quickqnairebackend.dto.CustomUserDetails;
-import com.maple.quickqnairebackend.entity.User;
+import org.springframework.security.core.GrantedAuthority;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
@@ -14,8 +14,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
 
 
 /**
@@ -70,10 +71,12 @@ public class JwtTokenUtil {
 
     // 生成 JWT Token
     public String generateToken(Authentication authentication) {
-        // 令牌id
-        String uuid = UUID.randomUUID().toString();
         Date exprireDate = Date.from(Instant.now().plusSeconds(EXPIRATION_TIME));
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        // 将 authorities 转换为 List<String>
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
 
         return Jwts.builder()
                 .header()
@@ -82,8 +85,7 @@ public class JwtTokenUtil {
                 .and()
                 .claim(USER_NAME,userDetails.getUsername())
                 .claim(USER_ID, userDetails.getUserId())  // 将用户 ID 放入 payload
-                .claim(ROLE, userDetails.getAuthorities())  // 将角色信息加入 token
-                .id(uuid)
+                .claim(ROLE, roles)  // 将角色信息加入 token
                 .expiration(exprireDate)
                 .issuedAt(new Date())
                 .issuer(JWT_ISS)
@@ -100,9 +102,8 @@ public class JwtTokenUtil {
      */
     public boolean isTokenValid(String token) {
         try {
-            System.out.println(parseTokenPayload(token).getExpiration());
             return !parseTokenPayload(token).getExpiration().before(new Date());
-        } catch (Exception e) {
+        }catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
@@ -120,9 +121,9 @@ public class JwtTokenUtil {
     }
 
     // 获取用户角色
-    public String extractRole(String token) {
+    public List<String> extractRole(String token) {
         Claims claims = parseTokenPayload(token);
-        return claims.get(ROLE, String.class);  // 获取角色
+        return claims.get(ROLE, List.class);  // 获取角色
     }
 
     // 获取用户 ID

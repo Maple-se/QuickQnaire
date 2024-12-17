@@ -42,28 +42,17 @@ public class SurveyService {
     @Transactional
     public SurveySimpleInfoDTO createSurvey(SurveyDTO creationDTO, Long userId) {
         User user = userService.getUserById(userId);
-        Survey survey = toEntity(creationDTO);
+        Survey survey = dtoToSurvey(creationDTO);
         survey.setDuration(defaultSurveyDuration);
         survey.setCreatedBy(user);  // 设置创建者
         survey.create(); // 设置其他必要字段
         if (user.getRole().equals(User.Role.ADMIN)) {
             survey.approve();
         }
+        System.out.println(survey);
         // 保存 Survey 并返回状态字段 DTO
         return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
-
-
-    private Survey toEntity(SurveyDTO dto) {
-        Survey survey = new Survey();
-        survey.setTitle(dto.getTitle());
-        survey.setDescription(dto.getDescription());
-        survey.setAccessLevel(dto.getAccessLevel());
-        survey.setUserSetDuration(dto.getUserSetDuration());
-        survey.setMaxResponses(dto.getMaxResponses());
-        return survey;
-    }
-
 
     // 获取所有问卷
     public List<Survey> getAllSurveys() {
@@ -242,6 +231,10 @@ public class SurveyService {
 
     public List<SurveySimpleInfoDTO> surveysToSimpleInfoDTO(List<Survey> surveys) {
         return surveyMapper.surveysToSimpleInfoDTO(surveys);
+    }
+
+    public Survey dtoToSurvey(SurveyDTO surveyDTO){
+        return surveyMapper.toSurvey(surveyDTO);
     }
 }
 

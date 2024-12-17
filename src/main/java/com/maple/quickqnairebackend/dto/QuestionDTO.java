@@ -27,7 +27,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionDTO {
-    private Long questionId;  // 问题ID，用于更新现有问题,更新时可以为空
+    private Long questionId;  // 问题ID,更新时可以为空
 
     @NotBlank(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class},message = "问题内容不能为空")
     @Size(min = 1,max = 100,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷内容长度应在1到100个字符之间")

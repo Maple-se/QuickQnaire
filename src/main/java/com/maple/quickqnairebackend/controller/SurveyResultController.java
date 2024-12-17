@@ -16,6 +16,7 @@ import com.maple.quickqnairebackend.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,7 +32,7 @@ public class SurveyResultController {
     // 提交问卷结果
     //ToDo:问卷结果提交待检查
     @PostMapping("/submit-survey")
-    public ResponseEntity<?> submitSurveyResult(@RequestBody SurveyResultDTO surveyResultDTO) {
+    public ResponseEntity<?> submitSurveyResult(@Validated @RequestBody SurveyResultDTO surveyResultDTO) {
 
         // 保存 SurveyResult，JPA 会自动调用 @PrePersist 方法
         //SurveyResult savedSurveyResult = surveyResultService.saveSurveyResult(surveyResult);

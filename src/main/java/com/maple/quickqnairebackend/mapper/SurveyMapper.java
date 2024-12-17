@@ -38,7 +38,37 @@ public interface SurveyMapper {
     // 转换单个 Survey 为 SurveySimpleInfoDTO
     SurveySimpleInfoDTO surveyToSimpleInfoDTO(Survey survey);
 
-    // 转换 SurveyDTO 为 Survey（在更新时可能用到）
 
+    //测试
+    //转换DTO为Entity，创建问卷
+
+    @Mapping(target = "id", ignore = true)
     Survey toSurvey(SurveyDTO surveyDTO);
+
+    @Mapping(target = "id", ignore = true)
+    Question toQuestion(QuestionDTO questionDTO);
+
+    @Mapping(target = "id", ignore = true)
+    QuestionOption toOption(QuestionOption questionOption);
+
+
+    // 映射后设置双向关系
+    @AfterMapping
+    default void setSurveyInQuestions(@MappingTarget Survey survey) {
+        if (survey.getQuestions() != null) {
+            survey.getQuestions().forEach(question -> question.setSurvey(survey));
+        }
+    }
+
+    // 如果需要，可以为 Question 设置双向关系
+    @AfterMapping
+    default void setQuestionInOptions(@MappingTarget Survey survey) {
+        if (survey.getQuestions() != null) {
+            survey.getQuestions().forEach(question -> {
+                if (question.getOptions() != null) {
+                    question.getOptions().forEach(option -> option.setQuestion(question));
+                }
+            });
+        }
+    }
 }

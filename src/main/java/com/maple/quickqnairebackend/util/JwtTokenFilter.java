@@ -11,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -35,11 +36,15 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenUtil.isTokenValid(token)) {  // 直接调用 JwtTokenUtil 静态方法
             Long userId = jwtTokenUtil.extractUserId(token);
-            String role = jwtTokenUtil.extractRole(token);
+            // 验证 token 并提取角色
+            List<String> roles = jwtTokenUtil.extractRole(token);
+
+            // 将 List<String> 转换为数组
+            String[] rolesArray = roles.toArray(new String[0]);
 
             // 设置认证信息，加入角色信息
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userId, null, AuthorityUtils.createAuthorityList(role));
+                    userId, null, AuthorityUtils.createAuthorityList(rolesArray));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

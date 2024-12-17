@@ -154,6 +154,11 @@ public class Survey {
         }
     }
 
+    @Override
+    public String toString() {
+        // 输出问题内容和选项列表
+        return "Survey{id=" + id + ", title='" + title + "', description=" + description + "',accessLevel="+accessLevel+"',Questions{"+questions+"}}";
+    }
 
     // 检查用户设置的持续时间是否已过
 //    private boolean isUserSetDurationExpired() {

@@ -74,7 +74,7 @@ public class Question {
     @Override
     public String toString() {
         // 输出问题内容和选项列表
-        return "Question{id=" + id + ", content='" + questionContent + "', options=" + options + "}";
+        return "Question{id=" + id + ", content='" + questionContent + "', options=" + options +"',Questions{"+options+ "}}";
     }
 
 
