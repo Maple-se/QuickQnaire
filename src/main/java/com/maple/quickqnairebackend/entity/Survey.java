@@ -27,6 +27,7 @@ public class Survey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter
     private Long id;
 
     @Column(nullable = false, length = 255)
@@ -114,6 +115,11 @@ public class Survey {
 
     // 自定义方法：用户创建问卷
     public void create() {
+        this.status = SurveyStatus.DRAFT;
+    }
+
+    //问卷更新
+    public void update() {
         this.status = SurveyStatus.DRAFT;
     }
 

@@ -68,43 +68,16 @@ public class QuestionService {
     }
 
 
-    // 处理问题列表
-    @Transactional
-    public Question processQuestion(Long surveyId, QuestionDTO questionDTO) {
-        Question updatedQuestion = new Question();
-        // 处理请求中的问题
-            if (questionDTO.getQuestionId() != null) {
-                // 使用 existsBy 来判断问题是否存在于该 Survey 中
-                boolean exists = questionRepository.existsByIdAndSurveyId(questionDTO.getQuestionId(), surveyId);
-
-                if (exists) {
-                    // 如果存在，更新问题
-                    Question existingQuestion = getQuestionById(questionDTO.getQuestionId());
-                    updatedQuestion = updateQuestion(existingQuestion, questionDTO);
-                } else {
-                    // 如果不存在，抛出异常
-                    throw new IllegalArgumentException("Question ID " + questionDTO.getQuestionId() + " not found in this survey");
-                }
-            } else {
-                // 新增问题
-                updatedQuestion = createQuestion(surveyId, questionDTO);
-            }
-            //强刷数据库，确保最新数据已保存
-            entityManager.flush();
-            entityManager.clear();
-            return updatedQuestion;
-    }
-
 
     // 更新问题
-    @Transactional
-    public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
-        question.setQuestionContent(questionUpdateDTO.getQuestionContent());
-        //要么删、要么增、问题类型不必变更
-        //if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
-        if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());
-        return questionRepository.save(question);
-    }
+//    @Transactional
+//    public Question updateQuestion(Question question, QuestionDTO questionUpdateDTO) {
+//        question.setQuestionContent(questionUpdateDTO.getQuestionContent());
+//        //要么删、要么增、问题类型不必变更
+//        //if (questionUpdateDTO.getQuestionType() != null) question.setType(questionUpdateDTO.getQuestionType());
+//        if (questionUpdateDTO.getRequired() != null) question.setRequired(questionUpdateDTO.getRequired());
+//        return questionRepository.save(question);
+//    }
 
 
 

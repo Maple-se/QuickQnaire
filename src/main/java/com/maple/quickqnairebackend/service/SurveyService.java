@@ -49,7 +49,6 @@ public class SurveyService {
         if (user.getRole().equals(User.Role.ADMIN)) {
             survey.approve();
         }
-        System.out.println(survey);
         // 保存 Survey 并返回状态字段 DTO
         return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
@@ -66,15 +65,19 @@ public class SurveyService {
     }
 
     // 更新问卷信息
+    //全增量更新
     @Transactional
-    public Survey updateSurvey(Survey survey, SurveyDTO updatedSurvey) {
-        // 更新基本信息
-        survey.setTitle(updatedSurvey.getTitle());
-        survey.setDescription(updatedSurvey.getDescription());
-        if (updatedSurvey.getAccessLevel() != null) survey.setAccessLevel(updatedSurvey.getAccessLevel());
-        if (updatedSurvey.getUserSetDuration() != null) survey.setUserSetDuration(updatedSurvey.getUserSetDuration());
-        if (updatedSurvey.getMaxResponses() != null) survey.setMaxResponses(updatedSurvey.getMaxResponses());
+    public Survey updateSurvey(SurveyDTO updatedSurvey,User user) {
+        Survey oldSurvey = getSurveyById(updatedSurvey.getSurveyId());
 
+        //问卷创建者才可以更新
+        validateSurveyOwnership(oldSurvey, user);
+        //草稿状态才可以更新
+        isDraftStatus(oldSurvey);
+        Survey survey = dtoToSurvey(updatedSurvey);
+        survey.setCreatedBy(oldSurvey.getCreatedBy());
+        survey.setDuration(oldSurvey.getDuration());
+        survey.update();
         return surveyRepository.save(survey);
     }
 

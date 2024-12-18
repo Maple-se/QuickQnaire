@@ -34,15 +34,15 @@ public class SurveyDTO {
     private Long surveyId;  // 问卷ID
 
     @NotBlank(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题不能为空")
-    @Size(max = 100, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题长度不能超过100个字符")
+    @Size(min = 2,max = 100, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷标题长度不能超过100个字符")
     private String title;  // 问卷标题
 
     @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不能为空")
-    @Size(max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不超过200个字符")
+    @Size(min = 2,max = 200, groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷描述不超过200个字符")
     private String description;  // 问卷描述
 
     //ToDo:枚举字段验证待考虑
-    @NotNull(groups = SurveyCreateGroup.class, message = "问卷访问权限不能为空")
+    @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷访问权限不能为空")
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
 
     private Integer userSetDuration;  // 用户自定义的持续时间（小时）

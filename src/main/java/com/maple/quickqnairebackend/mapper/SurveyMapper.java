@@ -42,17 +42,17 @@ public interface SurveyMapper {
     //测试
     //转换DTO为Entity，创建问卷
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "surveyId")
     Survey toSurvey(SurveyDTO surveyDTO);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "questionId")
     Question toQuestion(QuestionDTO questionDTO);
 
-    @Mapping(target = "id", ignore = true)
-    QuestionOption toOption(QuestionOption questionOption);
+    @Mapping(target = "id", source = "optionId")
+    QuestionOption toOption(OptionDTO optionDTO);
 
 
-    // 映射后设置双向关系
+    // 双向映射设置 Survey 到 Question
     @AfterMapping
     default void setSurveyInQuestions(@MappingTarget Survey survey) {
         if (survey.getQuestions() != null) {
@@ -60,7 +60,7 @@ public interface SurveyMapper {
         }
     }
 
-    // 如果需要，可以为 Question 设置双向关系
+    // 双向映射设置 Question 到 Option
     @AfterMapping
     default void setQuestionInOptions(@MappingTarget Survey survey) {
         if (survey.getQuestions() != null) {

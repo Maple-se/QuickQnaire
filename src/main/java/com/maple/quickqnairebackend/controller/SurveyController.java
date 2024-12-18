@@ -48,8 +48,7 @@ public class SurveyController {
 
     private final UserService userService;
 
-    //创建问卷
-    //创建问卷API测试通过
+
     //ToDo:后续考虑实现自定义校验错误处理器
 //    @Transactional
 //    @PostMapping("/create")
@@ -74,7 +73,8 @@ public class SurveyController {
 //        }
 //    }
 
-
+    //创建问卷
+    //创建问卷API测试通过
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -107,7 +107,43 @@ public class SurveyController {
     }
 
     //更新问卷
-    @Transactional
+//    @Transactional
+//    @PutMapping("/update-survey")
+//    public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto) {
+//        //try {
+//        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
+//        User user = userService.getUserById(userId);
+//
+//        // 根据解码后的 surveyId 获取问卷
+//        Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
+//
+//        //问卷创建者才可以更新
+//        surveyService.validateSurveyOwnership(survey, user);
+//        //草稿状态才可以更新
+//        surveyService.isDraftStatus(survey);
+//        //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
+//        Survey updatedSurvey = surveyService.updateSurvey(survey, sdto);
+//
+//        // 处理问题列表
+//        if (sdto.getQuestions() != null) {
+//            // 更新问题列表
+//            for (QuestionDTO questionDTO : sdto.getQuestions()) {
+//                Question updatedQuestion = questionService.processQuestion(updatedSurvey.getId(), questionDTO);
+//                if (questionDTO.getType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
+//                    for (OptionDTO odto : questionDTO.getOptions()) {
+//                        optionService.processOption(updatedQuestion.getId(), odto);
+//                    }
+//                }
+//            }
+//        }
+//        return ResponseEntity.ok(surveyService.surveyToSimpleInfoDTO(surveyService.getSurveyById(updatedSurvey.getId())));
+//    }
+
+
+    //问卷更新
+    //API测试通过
     @PutMapping("/update-survey")
     public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto) {
         //try {
@@ -116,29 +152,9 @@ public class SurveyController {
         Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
         User user = userService.getUserById(userId);
 
-        // 根据解码后的 surveyId 获取问卷
-        Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
-
-        //问卷创建者才可以更新
-        surveyService.validateSurveyOwnership(survey, user);
-        //草稿状态才可以更新
-        surveyService.isDraftStatus(survey);
         //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
-        Survey updatedSurvey = surveyService.updateSurvey(survey, sdto);
-
-        // 处理问题列表
-        if (sdto.getQuestions() != null) {
-            // 更新问题列表
-            for (QuestionDTO questionDTO : sdto.getQuestions()) {
-                Question updatedQuestion = questionService.processQuestion(updatedSurvey.getId(), questionDTO);
-                if (questionDTO.getType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
-                    for (OptionDTO odto : questionDTO.getOptions()) {
-                        optionService.processOption(updatedQuestion.getId(), odto);
-                    }
-                }
-            }
-        }
-        return ResponseEntity.ok(surveyService.surveyToSimpleInfoDTO(surveyService.getSurveyById(updatedSurvey.getId())));
+        Survey updatedSurvey = surveyService.updateSurvey(sdto,user);
+        return ResponseEntity.ok(surveyService.surveyToSimpleInfoDTO(updatedSurvey));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

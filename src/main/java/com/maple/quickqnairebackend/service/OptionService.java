@@ -25,9 +25,6 @@ import java.util.Optional;
 @Service
 public class OptionService {
 
-    @Autowired
-    private EntityManager entityManager;
-
 
     @Autowired
     private OptionRepository optionRepository;
@@ -61,37 +58,12 @@ public class OptionService {
         return optionRepository.existsByIdAndQuestionId(optionId,questionId);
     }
 
-    // 处理选项列表
-    @Transactional
-    public void processOption(Long questionId ,OptionDTO optionDTO) {
-
-            if (optionDTO.getOptionId() != null) {
-                // 使用 existsBy 来判断问题是否存在于该 Survey 中
-                boolean exists = optionRepository.existsByIdAndQuestionId(optionDTO.getOptionId(), questionId);
-
-                if (exists) {
-                    // 如果存在，更新问题
-                    QuestionOption existingOption = getOptionById(optionDTO.getOptionId());
-                    updateOption(existingOption, optionDTO);
-                } else {
-                    // 如果不存在，抛出异常
-                    throw new IllegalArgumentException("Option ID " + optionDTO.getOptionId() + " not found in this question");
-                }
-            } else {
-                // 新增选项
-               createOption(questionId, optionDTO);
-            }
-            //强刷数据库，确保最新数据已保存
-            entityManager.flush();
-            entityManager.clear();
-    }
-
     // 更新选项
-    @Transactional
-    public void updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
-        if (StringUtils.isNotBlank(optionUpdateDTO.getOptionContent())) option.setOptionContent(optionUpdateDTO.getOptionContent());
-        optionRepository.save(option);
-    }
+//    @Transactional
+//    public void updateOption(QuestionOption option, OptionDTO optionUpdateDTO) {
+//        if (StringUtils.isNotBlank(optionUpdateDTO.getOptionContent())) option.setOptionContent(optionUpdateDTO.getOptionContent());
+//        optionRepository.save(option);
+//    }
 
     // 删除选项
     @Transactional
