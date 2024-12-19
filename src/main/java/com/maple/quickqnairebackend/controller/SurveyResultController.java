@@ -13,6 +13,7 @@ import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.SurveyResultService;
 import com.maple.quickqnairebackend.service.UserService;
 import com.maple.quickqnairebackend.util.JwtTokenUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +21,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/quickqnaire")
 public class SurveyResultController {
 
-    @Autowired
-    private SurveyResultService surveyResultService;
+    private final SurveyResultService surveyResultService;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     // 提交问卷结果
     //ToDo:问卷结果提交待检查

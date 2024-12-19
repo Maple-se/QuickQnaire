@@ -6,6 +6,7 @@ import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.mapper.SurveyMapper;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,19 +24,17 @@ import java.util.List;
  * @description :
  */
 @Service
+@RequiredArgsConstructor
 public class SurveyService {
 
-    @Autowired
-    private SurveyRepository surveyRepository;
+    private final SurveyRepository surveyRepository;
 
-    @Autowired
-    private UserService userService;  // 通过 UserService 获取用户信息
+    private final UserService userService;  // 通过 UserService 获取用户信息
 
     @Value("${survey.default.duration}")
     private int defaultSurveyDuration;  // 默认持续时间，单位：小时
 
-    @Autowired
-    private SurveyMapper surveyMapper;
+    private final SurveyMapper surveyMapper;
 
 
     // 创建新问卷
@@ -53,10 +52,6 @@ public class SurveyService {
         return surveyToSimpleInfoDTO(surveyRepository.save(survey));
     }
 
-    // 获取所有问卷
-    public List<Survey> getAllSurveys() {
-        return surveyRepository.findAll();
-    }
 
     // 获取单个问卷详情
     public Survey getSurveyById(Long id) {

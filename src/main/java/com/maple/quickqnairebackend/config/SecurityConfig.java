@@ -30,8 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;  // 自动注入自定义的 UserDetailsService
+    private final CustomUserDetailsService userDetailsService;  // 自动注入自定义的 UserDetailsService
 
     private final JwtTokenFilter jwtTokenFilter;
 

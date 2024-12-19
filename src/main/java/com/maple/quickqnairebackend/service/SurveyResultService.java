@@ -11,6 +11,7 @@ import com.maple.quickqnairebackend.entity.SurveyResult;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.SurveyResultRepository;
 import com.maple.quickqnairebackend.util.JwtTokenUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +19,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class SurveyResultService {
 
-    @Autowired
-    private SurveyResultRepository surveyResultRepository;
+    private final SurveyResultRepository surveyResultRepository;
 
 
     // 保存一个新的 SurveyResult

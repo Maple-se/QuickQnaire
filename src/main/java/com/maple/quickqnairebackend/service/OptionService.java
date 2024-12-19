@@ -12,6 +12,7 @@ import com.maple.quickqnairebackend.entity.QuestionOption;
 import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.repository.OptionRepository;
 import com.maple.quickqnairebackend.repository.QuestionRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,14 +24,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OptionService {
 
 
-    @Autowired
-    private OptionRepository optionRepository;
+    private final OptionRepository optionRepository;
 
-    @Autowired
-    private QuestionRepository questionRepository;
+
+    private final QuestionRepository questionRepository;
 
     // 创建新的选项
     @Transactional

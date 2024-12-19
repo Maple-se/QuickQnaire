@@ -11,6 +11,7 @@ package com.maple.quickqnairebackend.service;
 import com.maple.quickqnairebackend.dto.UserDTO;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,13 +23,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     // 创建用户
     @Transactional  // 添加事务注解，保证操作的原子性
