@@ -30,9 +30,10 @@ public class QuestionDTO {
     private Long questionId;  // 问题ID,更新时可以为空
 
     @NotBlank(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class},message = "问题内容不能为空")
-    @Size(min = 1,max = 100,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷内容长度应在1到100个字符之间")
+    @Size(min = 2,max = 100,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问题内容不少于2字符，不超过100字符")
     private String questionContent;  // 问题内容
 
+    //ToDo:枚举类型校验需要做进一步细化
     @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class},message = "问题类型不能为空")
     private Question.QuestionType type;  // 问题类型（单选、多选等）
 
