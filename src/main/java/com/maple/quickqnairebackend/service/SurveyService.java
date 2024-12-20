@@ -72,6 +72,8 @@ public class SurveyService {
         Survey survey = dtoToSurvey(updatedSurvey);
         survey.setCreatedBy(oldSurvey.getCreatedBy());
         survey.setDuration(oldSurvey.getDuration());
+        if(updatedSurvey.getUserSetDuration()==null) survey.setUserSetDuration(oldSurvey.getUserSetDuration());
+        if(updatedSurvey.getMaxResponses()==null) survey.setMaxResponses(oldSurvey.getMaxResponses());
         survey.update();
         return surveyRepository.save(survey);
     }

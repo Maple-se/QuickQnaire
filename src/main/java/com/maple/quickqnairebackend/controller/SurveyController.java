@@ -75,6 +75,7 @@ public class SurveyController {
 
     //创建问卷
     //创建问卷API测试通过
+    //允许：登录用户
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -85,6 +86,7 @@ public class SurveyController {
     }
 
 
+    //允许：问卷所有者
     @GetMapping("/preview/{encodedSurveyId}")
     public ResponseEntity<?> previewSurvey(@PathVariable String encodedSurveyId) {
         // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -144,6 +146,7 @@ public class SurveyController {
 
     //问卷更新
     //API测试通过
+    //允许：问卷所有者+问卷草稿状态
     @PutMapping("/update-survey")
     public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto) {
         //try {
@@ -168,6 +171,7 @@ public class SurveyController {
 
     //用户提交问卷，管理员审批
     //API测试通过
+    //允许：问卷所有者+问卷草稿状态
     @PutMapping("/submit-for-approval/{encodedSurveyId}")
     public ResponseEntity<?> submitSurveyForApproval(@PathVariable String encodedSurveyId) {
         try {
@@ -201,6 +205,7 @@ public class SurveyController {
     //ToDo:问卷状态变更存在冗余代码
     //管理员批准问卷，状态变为active
     //API测试通过
+    //允许：管理员+问卷PENDING_APPROVAL
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/approval-survey/{encodedSurveyId}")
     public ResponseEntity<?> approvalSurvey(@PathVariable String encodedSurveyId) {
@@ -228,6 +233,7 @@ public class SurveyController {
 
     //管理员拒绝问卷，状态变为草稿
     //API测试通过
+    //允许：管理员+问卷PENDING_APPROVAL
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/reject-survey/{encodedSurveyId}")
     public ResponseEntity<?> rejectSurvey(@PathVariable String encodedSurveyId) {
@@ -256,6 +262,7 @@ public class SurveyController {
 
     //管理员或用户，手动关闭问卷
     //API测试通过
+    //允许：管理员、问卷所有者+问卷PENDING_APPROVAL和ACTIVE
     @PutMapping("/close-survey/{encodedSurveyId}")
     public ResponseEntity<?> closeSurvey(@PathVariable String encodedSurveyId) {
         try {
@@ -290,6 +297,7 @@ public class SurveyController {
 
     //删除问卷
     //API测试通过
+    //允许：管理员+问卷所有者
     @DeleteMapping("/delete-survey/{encodedSurveyId}")
     public ResponseEntity<?> deleteSurvey(@PathVariable String encodedSurveyId) {
             // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -318,6 +326,7 @@ public class SurveyController {
     //API测试通过，删除逻辑暂无问题
     // ToDo:需要考虑整个Controller层架构设计问题，
     //  包括：使用 @PreAuthorize 或 @Secured 实现权限控制以及Base64解码验证逻辑，过于冗余
+    //允许：问卷所有者+问卷草稿状态
     @DeleteMapping("/delete-question/{encodedSurveyId}")
     public ResponseEntity<String> deleteQuestion(@PathVariable String encodedSurveyId, @RequestParam Long questionId) {
         // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -352,6 +361,7 @@ public class SurveyController {
     //问题选项删除逻辑
     //API测试通过
     //ToDo:有待进一步优化逻辑以及实现选项的批量删除
+    //允许：问卷所有者+问卷草稿状态
     @DeleteMapping("/delete-option/{encodedSurveyId}")
     public ResponseEntity<String> deleteOption(@PathVariable String encodedSurveyId, @RequestParam Long questionId, @RequestParam Long optionId) {
         // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
@@ -373,6 +383,7 @@ public class SurveyController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission to delete this question.");
         }
         // 删除问题
+        //ToDo:需判断问题是否存在问卷内以及选项是否存在于问题内
         boolean exists = optionService.IsOptionExistInQuestion(optionId,questionId);
         if (!exists) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Option ID " + optionId + " not found in this question");
@@ -383,6 +394,7 @@ public class SurveyController {
     }
 
     // 根据用户ID获取所有问卷
+    //允许：问卷所有者
     @GetMapping("/surveys")
     public ResponseEntity<?> getSurveysByUser() {
         try {
@@ -400,6 +412,8 @@ public class SurveyController {
     //因在antMatchers("/quickqnaire/detail/**").permitAll() 处放开了该API，因此需要对
     // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     //上下文对象进行详细的判空处理
+    //问卷填写控制层
+    //问卷发布，按照问卷访问控制级别处理
     @Transactional
     @GetMapping("/detail/{encodedSurveyId}")
     public ResponseEntity<?> getSurveyById(@PathVariable String encodedSurveyId) {
