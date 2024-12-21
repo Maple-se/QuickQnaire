@@ -1,10 +1,7 @@
 package com.maple.quickqnairebackend.controller;
 
-import com.maple.quickqnairebackend.dto.OptionDTO;
-import com.maple.quickqnairebackend.dto.QuestionDTO;
 import com.maple.quickqnairebackend.dto.SurveyDTO;
 import com.maple.quickqnairebackend.dto.SurveySimpleInfoDTO;
-import com.maple.quickqnairebackend.entity.Question;
 import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.service.OptionService;
@@ -14,7 +11,6 @@ import com.maple.quickqnairebackend.service.UserService;
 import com.maple.quickqnairebackend.validation.SurveyCreateGroup;
 import com.maple.quickqnairebackend.validation.SurveyUpdateGroup;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,29 +46,6 @@ public class SurveyController {
 
 
     //ToDo:后续考虑实现自定义校验错误处理器
-//    @Transactional
-//    @PostMapping("/create")
-//    public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
-//        try {
-//            // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
-//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//            Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
-//            SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.createSurvey(surveyCreationDTO, userId);
-//            for (QuestionDTO qdto : surveyCreationDTO.getQuestions()) {
-//                Question createdQuestion = questionService.createQuestion(surveySimpleInfoDTO.getId(), qdto);
-//                // 根据问题类型，创建选项（如果是单选或多选类型）
-//                if (qdto.getType() == Question.QuestionType.SINGLE_CHOICE || qdto.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
-//                    for (OptionDTO odto : qdto.getOptions()) {
-//                        optionService.createOption(createdQuestion.getId(), odto);
-//                    }
-//                }
-//            }
-//            return ResponseEntity.ok(surveySimpleInfoDTO);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Create Survey Error: " + e.getMessage());
-//        }
-//    }
-
     //创建问卷
     //创建问卷API测试通过
     //允许：登录用户
@@ -107,42 +80,6 @@ public class SurveyController {
         surveyService.validateSurveyOwnership(survey, user);
         return ResponseEntity.ok(surveyService.toSurveyDTO(survey));
     }
-
-    //更新问卷
-//    @Transactional
-//    @PutMapping("/update-survey")
-//    public ResponseEntity<?> updateSurveyDetail(@Validated(SurveyUpdateGroup.class) @RequestBody SurveyDTO sdto) {
-//        //try {
-//        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 userId
-//        User user = userService.getUserById(userId);
-//
-//        // 根据解码后的 surveyId 获取问卷
-//        Survey survey = surveyService.getSurveyById(sdto.getSurveyId());
-//
-//        //问卷创建者才可以更新
-//        surveyService.validateSurveyOwnership(survey, user);
-//        //草稿状态才可以更新
-//        surveyService.isDraftStatus(survey);
-//        //增量更新（仅更新变动部分的数据（例如新增、修改），删除逻辑独立出去
-//        Survey updatedSurvey = surveyService.updateSurvey(survey, sdto);
-//
-//        // 处理问题列表
-//        if (sdto.getQuestions() != null) {
-//            // 更新问题列表
-//            for (QuestionDTO questionDTO : sdto.getQuestions()) {
-//                Question updatedQuestion = questionService.processQuestion(updatedSurvey.getId(), questionDTO);
-//                if (questionDTO.getType() == Question.QuestionType.SINGLE_CHOICE || questionDTO.getType() == Question.QuestionType.MULTIPLE_CHOICE) {
-//                    for (OptionDTO odto : questionDTO.getOptions()) {
-//                        optionService.processOption(updatedQuestion.getId(), odto);
-//                    }
-//                }
-//            }
-//        }
-//        return ResponseEntity.ok(surveyService.surveyToSimpleInfoDTO(surveyService.getSurveyById(updatedSurvey.getId())));
-//    }
-
 
     //问卷更新
     //API测试通过

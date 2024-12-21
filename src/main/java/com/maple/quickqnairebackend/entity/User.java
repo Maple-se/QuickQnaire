@@ -24,6 +24,7 @@ import java.util.List;
 public class User {
 
     @Id
+    @Setter //测试需要暂时加上该注解
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -79,5 +80,15 @@ public class User {
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = new Date();  // 每次更新时都会设置更新时间
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                '}';
     }
 }

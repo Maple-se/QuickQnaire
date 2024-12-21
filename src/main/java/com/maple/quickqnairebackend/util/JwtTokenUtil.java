@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -123,7 +124,15 @@ public class JwtTokenUtil {
     // 获取用户角色
     public List<String> extractRole(String token) {
         Claims claims = parseTokenPayload(token);
-        return claims.get(ROLE, List.class);  // 获取角色
+        Object roleClaim = claims.get(ROLE);
+
+        // 如果 ROLE 只是一个单一字符串，转换成 List<String> 处理
+        if (roleClaim instanceof String) {
+            return Collections.singletonList((String) roleClaim);
+        }
+
+        // 如果是 List 类型，则直接返回
+        return (List<String>) roleClaim;
     }
 
     // 获取用户 ID
