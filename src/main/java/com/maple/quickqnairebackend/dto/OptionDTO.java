@@ -26,6 +26,6 @@ public class OptionDTO {
     private Long optionId;  // 选项ID，用于更新现有选项
 
     @NotBlank(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class},message = "选项内容不能为空")
-    @Size(min = 2,max = 50,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "选项内容不少于2字符，不超过100字符")
+    @Size(min = 1,max = 50,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "选项内容不少于1字符，不超过50字符")
     private String optionContent;  // 选项内容
 }

@@ -17,10 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.util.List;
 
 @Setter
@@ -45,7 +42,7 @@ public class SurveyDTO {
     @NotNull(groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class}, message = "问卷访问权限不能为空")
     private Survey.AccessLevel accessLevel;  // 问卷访问权限
 
-    @Size(max = 162,message = "问卷持续时间不得超过一周")//暂时这样设计
+    @Max(value = 162,groups = {SurveyCreateGroup.class, SurveyUpdateGroup.class},message = "问卷持续时间不得超过一周")//暂时这样设计
     private Integer userSetDuration;  // 用户自定义的持续时间（小时）
 
     private Integer maxResponses;  // 用户自定义的最大响应数
