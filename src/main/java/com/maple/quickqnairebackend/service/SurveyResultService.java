@@ -7,8 +7,10 @@ package com.maple.quickqnairebackend.service;
  * @version : 1.0
  * @description :
  */
+import com.maple.quickqnairebackend.dto.SurveyResultDTO;
 import com.maple.quickqnairebackend.entity.SurveyResult;
 import com.maple.quickqnairebackend.entity.User;
+import com.maple.quickqnairebackend.mapper.SurveyResultMapper;
 import com.maple.quickqnairebackend.repository.SurveyResultRepository;
 import com.maple.quickqnairebackend.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +26,13 @@ public class SurveyResultService {
 
     private final SurveyResultRepository surveyResultRepository;
 
+    private  final SurveyResultMapper surveyResultMapper;
+
 
     // 保存一个新的 SurveyResult
-    public SurveyResult saveSurveyResult(SurveyResult surveyResult) {
+    public SurveyResult saveSurveyResult(SurveyResultDTO surveyResult) {
         // 如果是已登录用户，直接关联 User
-        //surveyResult.setUser(user);
-        return surveyResultRepository.save(surveyResult);
+        return surveyResultRepository.save(dtoToSurveyResult(surveyResult));
     }
 
     // 根据 Survey ID 和 User ID 获取已提交的问卷结果
@@ -47,5 +50,10 @@ public class SurveyResultService {
     // 获取用户提交的所有问卷结果
     public List<SurveyResult> getSurveyResultsByUserId(Long userId) {
         return surveyResultRepository.findByUserId(userId);
+    }
+
+
+    private  SurveyResult dtoToSurveyResult(SurveyResultDTO surveyResultDTO){
+       return surveyResultMapper.toEntity(surveyResultDTO);
     }
 }

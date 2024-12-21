@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class SurveyResultDTO {
     private Long surveyId;  // 关联的 Survey 的 ID
     private Long userId;  // 关联的 User 的 ID，匿名用户可以为空
     @Valid
+    @NotEmpty(message = "问卷列表不能为空")
     private List<QuestionResultDTO> questionResults;  // 用户填写的所有问题答案列表
 
 }

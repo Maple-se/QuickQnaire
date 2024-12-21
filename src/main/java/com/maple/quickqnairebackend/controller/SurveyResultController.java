@@ -9,16 +9,16 @@ package com.maple.quickqnairebackend.controller;
  */
 
 import com.maple.quickqnairebackend.dto.SurveyResultDTO;
+import com.maple.quickqnairebackend.entity.SurveyResult;
 import com.maple.quickqnairebackend.service.SurveyResultService;
 import com.maple.quickqnairebackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,28 +27,25 @@ public class SurveyResultController {
 
     private final SurveyResultService surveyResultService;
 
-    private final UserService userService;
-
     // 提交问卷结果
-    //ToDo:问卷结果提交待检查
+    //允许：问卷状态：Active，游客：Public访问权限的问卷可以提交，授权用户：既可以提交Public问卷也可提交Private问卷
     @PostMapping("/submit-survey")
     public ResponseEntity<?> submitSurveyResult(@Validated @RequestBody SurveyResultDTO surveyResultDTO) {
 
-        // 保存 SurveyResult，JPA 会自动调用 @PrePersist 方法
-        //SurveyResult savedSurveyResult = surveyResultService.saveSurveyResult(surveyResult);
+       SurveyResult surveyResult = surveyResultService.saveSurveyResult(surveyResultDTO);
 
         //ToDo
-        return ResponseEntity.status(HttpStatus.CREATED).body("ok");  // 返回保存后的 SurveyResult
+        return ResponseEntity.status(HttpStatus.CREATED).body(surveyResult);  // 返回保存后的 SurveyResult
     }
 
 
     // 获取用户已提交的问卷结果
-//    @GetMapping("/get")
-//    public ResponseEntity<SurveyResult> getSurveyResult(@RequestParam Long surveyId,
-//                                                        @RequestHeader("Authorization") String authorization) {
-//        String token = authorization.replace("Bearer ", "");
-//        Long userId = JwtTokenUtil.extractUserId(token);
+//    @GetMapping("/getAnswer")
+//    public ResponseEntity<SurveyResult> getSurveyResult(@RequestParam Long surveyId) {
 //
+//        // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
 //        // 获取问卷结果
 //        SurveyResult surveyResult = surveyResultService.getSurveyResult(surveyId, userId);
 //        if (surveyResult != null) {

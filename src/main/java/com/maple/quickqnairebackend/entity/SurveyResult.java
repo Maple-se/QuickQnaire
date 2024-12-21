@@ -44,6 +44,7 @@ public class SurveyResult {
     @Column(nullable = true)
     private Boolean anonymousId = false;  // 匿名用户标识，对于匿名问卷使用
 
+    @Setter
     @OneToMany(mappedBy = "surveyResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<QuestionResult> questionResults;  // 该用户填写的该问卷中的所有问题答案
