@@ -3,6 +3,7 @@ package com.maple.quickqnairebackend.mapper;
 import com.maple.quickqnairebackend.dto.QuestionResultDTO;
 import com.maple.quickqnairebackend.dto.SurveyResultDTO;
 import com.maple.quickqnairebackend.entity.*;
+import com.maple.quickqnairebackend.repository.UserRepository;
 import com.maple.quickqnairebackend.service.QuestionService;
 import com.maple.quickqnairebackend.service.SurveyService;
 import com.maple.quickqnairebackend.service.UserService;
@@ -22,8 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = "spring")
 public abstract class SurveyResultMapper {
 
-    @Autowired
-    protected UserService userService;
 
     @Autowired
     protected SurveyService surveyService;
@@ -34,7 +33,7 @@ public abstract class SurveyResultMapper {
 
     // 从 SurveyResultDTO 到 SurveyResult 的映射
     @Mapping(target = "survey", expression = "java(surveyService.getSurveyById(surveyResultDTO.getSurveyId()))")
-    @Mapping(target = "user",expression = "java(userService.getUserById(surveyResultDTO.getUserId()))")
+    @Mapping(target = "user",ignore = true)
     public abstract SurveyResult toEntity(SurveyResultDTO surveyResultDTO);
 
     // 从 QuestionResultDTO 到 QuestionResult 的映射

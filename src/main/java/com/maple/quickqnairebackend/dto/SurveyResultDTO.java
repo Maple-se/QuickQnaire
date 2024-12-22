@@ -24,7 +24,7 @@ public class SurveyResultDTO {
 
     @NotNull(message = "问卷ID不能为空")
     private Long surveyId;  // 关联的 Survey 的 ID
-    private Long userId;  // 关联的 User 的 ID，匿名用户可以为空
+//    private Long userId;  // 前端并不知道userId
     @Valid
     @NotEmpty(message = "问卷列表不能为空")
     private List<QuestionResultDTO> questionResults;  // 用户填写的所有问题答案列表
