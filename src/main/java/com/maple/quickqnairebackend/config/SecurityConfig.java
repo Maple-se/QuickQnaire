@@ -11,7 +11,6 @@ package com.maple.quickqnairebackend.config;
 import com.maple.quickqnairebackend.service.CustomUserDetailsService;
 import com.maple.quickqnairebackend.util.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +19,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -39,14 +39,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
+                .antMatchers(
+                        "/v1/api/get-token",
+                        "/swagger-ui.html",
+                        "/swagger-ui/*",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**").permitAll()
                 .antMatchers("/quickqnaire/login", "/quickqnaire/register").permitAll()  // 注册和登录接口无需认证
                 .antMatchers("/quickqnaire/detail/**").permitAll()  // 让所有 /quickqnaire/** 路径的请求都不需要认证
                 .antMatchers("/admin/**").hasRole("ADMIN")  // 只有管理员可以访问 /admin/** 路径
                 .antMatchers("/user/**").hasRole("USER")  // 只有普通用户可以访问 /user/** 路径
                 .anyRequest().authenticated()  //其他接口需要认证
-                .and()
-                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);  // JWT 过滤器
+                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and().addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);  // JWT 过滤器
     }
+
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
