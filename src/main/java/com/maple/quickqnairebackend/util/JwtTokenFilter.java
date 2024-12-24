@@ -1,17 +1,18 @@
 package com.maple.quickqnairebackend.util;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 
 /**
@@ -34,18 +35,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = jwtTokenUtil.removeTokenPrefix(request);
 
-        if (token != null && jwtTokenUtil.isTokenValid(token)) {  // 直接调用 JwtTokenUtil 静态方法
-            Long userId = jwtTokenUtil.extractUserId(token);
-            // 验证 token 并提取角色
-            List<String> roles = jwtTokenUtil.extractRole(token);
-
-            // 将 List<String> 转换为数组
-            String[] rolesArray = roles.toArray(new String[0]);
-
-            // 设置认证信息，加入角色信息
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userId, null, AuthorityUtils.createAuthorityList(rolesArray));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (StringUtils.hasText(token)) {
+            if(!jwtTokenUtil.isTokenExpired(token)){
+                // 捕获token过期异常并返回响应
+                response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 状态码
+                // 设置响应内容
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().print("登录令牌过期");
+                return; // 直接返回，避免后续filter链的处理
+            }
+            Authentication auth = jwtTokenUtil.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
         filterChain.doFilter(request, response);

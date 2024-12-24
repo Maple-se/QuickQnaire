@@ -2,21 +2,20 @@ package com.maple.quickqnairebackend.util;
 
 import com.maple.quickqnairebackend.config.JwtConfiguration;
 import com.maple.quickqnairebackend.dto.CustomUserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecureDigestAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -101,7 +100,7 @@ public class JwtTokenUtil {
      * @param token 令牌
      * @return 是否过期
      */
-    public boolean isTokenValid(String token) {
+    public boolean isTokenExpired(String token) {
         try {
             return !parseTokenPayload(token).getExpiration().before(new Date());
         }catch (JwtException | IllegalArgumentException e) {
@@ -135,10 +134,29 @@ public class JwtTokenUtil {
         return (List<String>) roleClaim;
     }
 
-    // 获取用户 ID
-    public Long extractUserId(String token) {
-        Claims claims = parseTokenPayload(token);
-        return claims.get(USER_ID, Long.class);  // 获取用户 ID
+
+    /**
+     * 根据 Token 获取认证信息
+     *
+     * @param token JWT Token
+     * @return 认证信息
+     */
+    public Authentication getAuthentication(String token) {
+        Claims claims = this.parseTokenPayload(token);
+        if (claims == null) {
+            return null;
+        }
+        // 构建角色信息
+       List<String> roles = extractRole(token);
+        // 将 List<String> 转换为数组
+        String[] rolesArray = roles.toArray(new String[0]);
+        // 构建  userDetails
+        CustomUserDetails userDetails = CustomUserDetails.builder()
+                .userId(claims.get(USER_ID, Long.class))
+                .username(claims.get(USER_NAME, String.class))
+                .roles(rolesArray).build();
+
+        return new UsernamePasswordAuthenticationToken(userDetails, "", AuthorityUtils.createAuthorityList(rolesArray));
     }
 
     /**
