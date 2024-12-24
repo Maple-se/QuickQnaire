@@ -6,12 +6,13 @@ import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.User;
 import com.maple.quickqnairebackend.mapper.SurveyMapper;
 import com.maple.quickqnairebackend.repository.SurveyRepository;
+import com.maple.quickqnairebackend.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -39,11 +40,12 @@ public class SurveyService {
 
     // 创建新问卷
     @Transactional
-    public SurveySimpleInfoDTO createSurvey(SurveyDTO creationDTO, Long userId) {
+    public SurveySimpleInfoDTO createSurvey(SurveyDTO creationDTO) {
+        Long userId = SecurityUtil.getUserId();
         User user = userService.getUserById(userId);
         Survey survey = dtoToSurvey(creationDTO);
         survey.setDuration(defaultSurveyDuration);
-        survey.setCreatedBy(user);  // 设置创建者
+        survey.setCreatedBy(userService.getUserById(userId));
         survey.create(); // 设置其他必要字段
         if (user.getRole().equals(User.Role.ADMIN)) {
             survey.approve();
@@ -62,13 +64,8 @@ public class SurveyService {
     // 更新问卷信息
     //全增量更新
     @Transactional
-    public Survey updateSurvey(SurveyDTO updatedSurvey,User user) {
+    public Survey updateSurvey(SurveyDTO updatedSurvey) {
         Survey oldSurvey = getSurveyById(updatedSurvey.getSurveyId());
-
-        //问卷创建者才可以更新
-        validateSurveyOwnership(oldSurvey, user);
-        //草稿状态才可以更新
-        isDraftStatus(oldSurvey);
         Survey survey = dtoToSurvey(updatedSurvey);
         survey.setCreatedBy(oldSurvey.getCreatedBy());
         survey.setDuration(oldSurvey.getDuration());
@@ -91,8 +88,9 @@ public class SurveyService {
 
 
     // 如果你需要额外的处理或数据转换，可以在服务层实现
-    public List<SurveySimpleInfoDTO> getSurveysByUserId(Long userId) {
-        User user = userService.getUserById(userId);  // 假设你有一个用户服务层来根据ID获取用户
+    public List<SurveySimpleInfoDTO> getSurveysByUserId() {
+        Long userId = SecurityUtil.getUserId();
+        User user = userService.getUserById(userId);
         List<Survey> surveys = surveyRepository.findByCreatedBy(user);
         // 将 Survey 转换为 DTO
         return surveysToSimpleInfoDTO(surveys);
@@ -206,6 +204,19 @@ public class SurveyService {
 
 
     //工具方法
+
+    //解码经Base64编码的问卷id
+    public Long getDecodedSurveyId(String encodedSurveyId){
+        // 解码 Base64 编码的 surveyId
+        String decodedId = new String(Base64.getUrlDecoder().decode(encodedSurveyId));
+        Long surveyId;
+        try {
+            surveyId = Long.parseLong(decodedId); // 转换为 Long 类型
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid survey ID format.");
+        }
+        return surveyId;
+    }
 
     // 验证问卷创建者
     public void validateSurveyOwnership(Survey survey, User user) {
