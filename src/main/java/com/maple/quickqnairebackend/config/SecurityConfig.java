@@ -10,6 +10,7 @@ package com.maple.quickqnairebackend.config;
 
 import com.maple.quickqnairebackend.service.CustomUserDetailsService;
 import com.maple.quickqnairebackend.util.JwtTokenFilter;
+import com.maple.quickqnairebackend.util.SurveyFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +35,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final JwtTokenFilter jwtTokenFilter;
 
+    private  final SurveyFilter surveyFilter;
+
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -52,7 +55,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/**").hasRole("USER")  // 只有普通用户可以访问 /user/** 路径
                 .anyRequest().authenticated()  //其他接口需要认证
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);  // JWT 过滤器
+                .and()
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)  // JWT 过滤器
+                .addFilterAfter(surveyFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
 

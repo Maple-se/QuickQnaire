@@ -111,4 +111,12 @@ public class SecurityUtil {
         }
         return userRoles.contains(String.valueOf(User.Role.ADMIN));
     }
+
+    public static String getSurveyDetail(Authentication authentication){
+        Object encodedSurveyId = authentication.getDetails();
+        if (encodedSurveyId instanceof String) {
+            return (String) encodedSurveyId;
+        }
+        return null;
+    }
 }
