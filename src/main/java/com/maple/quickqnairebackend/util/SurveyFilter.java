@@ -23,8 +23,6 @@ import java.io.IOException;
 public class SurveyFilter extends OncePerRequestFilter {
 
 
-    //ToDo:过滤器需处理游客浏览时的问卷问题
-    // 游客浏览时无授权，但需要问卷信息
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -38,13 +36,19 @@ public class SurveyFilter extends OncePerRequestFilter {
             String encodedSurveyId = extractSurveyIdFromUri(requestUri);
             // 获取当前的 Authentication 对象
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (encodedSurveyId != null && authentication != null) {
-                System.out.println(encodedSurveyId);
-               // 将 encodedSurveyId 存储到 Authentication 的 details 中
-               UsernamePasswordAuthenticationToken authWithSurveyId =
-                       new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), authentication.getAuthorities());
-               authWithSurveyId.setDetails(encodedSurveyId);  // 存储 Survey 到 SecurityContext
-               SecurityContextHolder.getContext().setAuthentication(authWithSurveyId);
+            if (encodedSurveyId != null ) {
+                //System.out.println(encodedSurveyId);
+                if(authentication != null){
+                    // 将 encodedSurveyId 存储到 Authentication 的 details 中
+                    UsernamePasswordAuthenticationToken authWithSurveyId =
+                            new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), authentication.getAuthorities());
+                    authWithSurveyId.setDetails(encodedSurveyId);  // 存储 Survey 到 SecurityContext
+                    SecurityContextHolder.getContext().setAuthentication(authWithSurveyId);
+                }else {
+                    UsernamePasswordAuthenticationToken anonymousAuthWithSurveyId = new UsernamePasswordAuthenticationToken("Anonymous","password123");
+                    anonymousAuthWithSurveyId.setDetails(encodedSurveyId);  // 存储 Survey 到 SecurityContext
+                    SecurityContextHolder.getContext().setAuthentication(anonymousAuthWithSurveyId);
+                }
             }
         }
 

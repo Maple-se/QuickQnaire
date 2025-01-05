@@ -32,11 +32,15 @@ public class SurveyPermissionChecker{
     public void init(Authentication authentication) {
         String encodedSurveyId = SecurityUtil.getSurveyDetail(authentication); // 获取编码后的 Survey ID
         Long authUserId = SecurityUtil.getUserId(authentication);
+        System.out.println(encodedSurveyId);
+        this.authUser = null;
         this.surveyToCheck = null;
         if (encodedSurveyId != null) {
             this.surveyToCheck = surveyService.getSurveyById(surveyService.getDecodedSurveyId(encodedSurveyId));
         }
-        this.authUser = userService.getUserById(authUserId);
+        if(authUserId != null){
+            this.authUser = userService.getUserById(authUserId);
+        }
     }
 
 
