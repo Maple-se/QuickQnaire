@@ -9,16 +9,16 @@ package com.maple.quickqnairebackend.controller;
  */
 
 import com.maple.quickqnairebackend.dto.SurveyResultDTO;
+import com.maple.quickqnairebackend.entity.Survey;
 import com.maple.quickqnairebackend.entity.SurveyResult;
 import com.maple.quickqnairebackend.service.SurveyResultService;
+import com.maple.quickqnairebackend.service.SurveyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,15 +27,26 @@ public class SurveyResultController {
 
     private final SurveyResultService surveyResultService;
 
+    private final SurveyService surveyService;
 
-    //ToDo:问卷提交的权限控制
-    // 提交问卷结果
-    //允许：问卷状态：Active，游客：Public访问权限的问卷可以提交，授权用户：既可以提交Public问卷也可提交Private问卷
-    @PostMapping("/submit-survey")
-    public ResponseEntity<?> submitSurveyResult(@Validated @RequestBody SurveyResultDTO surveyResultDTO) {
 
-       SurveyResult surveyResult = surveyResultService.saveSurveyResult(surveyResultDTO);
+    /*
+    * Active问卷
+    * Public 问卷可允许任何用户提交
+    * Private 问卷仅允许登录用户提交
+    *
+    * */
+    @PreAuthorize(
+            "@surveyPermission.adminAndActive()" +
+            " or @surveyPermission.checkSurveyAccessLevel()"
+    )
+    @PostMapping("/submit-survey/{encodedSurveyId}")
+    public ResponseEntity<?> submitSurveyResult(@Validated @RequestBody SurveyResultDTO surveyResultDTO , @PathVariable String encodedSurveyId) {
 
+        SurveyResult surveyResult = surveyResultService.saveSurveyResult(surveyResultDTO);
+        Long surveyId = surveyService.getDecodedSurveyId(encodedSurveyId);
+//        Survey survey = surveyService.getSurveyById(surveyId);
+//        survey.setResponsesReceived(survey.getResponsesReceived() + 1);
         return ResponseEntity.status(HttpStatus.CREATED).body(surveyResult);  // 返回保存后的 SurveyResult
     }
 

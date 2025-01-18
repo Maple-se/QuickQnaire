@@ -32,7 +32,6 @@ public class SurveyPermissionChecker{
     public void init(Authentication authentication) {
         String encodedSurveyId = SecurityUtil.getSurveyDetail(authentication); // 获取编码后的 Survey ID
         Long authUserId = SecurityUtil.getUserId(authentication);
-        System.out.println(encodedSurveyId);
         this.authUser = null;
         this.surveyToCheck = null;
         if (encodedSurveyId != null) {
@@ -46,7 +45,7 @@ public class SurveyPermissionChecker{
 
     public boolean authUser(){
         init(SecurityUtil.getAuthentication());
-        return this.authUser != null;
+        return !this.authUser.getUsername().equals("Anonymous");//不是匿名用户则证明是授权用户
     }
 
     public boolean owner(){
@@ -91,7 +90,21 @@ public class SurveyPermissionChecker{
     }
 
     public boolean adminAndActive(){
-        return admin() && active();
+        return active() && admin();
     }
+
+    public boolean checkSurveyAccessLevel(){
+        init(SecurityUtil.getAuthentication());
+        Survey.AccessLevel accessLevelToCheck = surveyToCheck.getAccessLevel();
+        if(active()){
+            if(accessLevelToCheck.equals(Survey.AccessLevel.PUBLIC)){
+                return true;
+            }else if (accessLevelToCheck.equals(Survey.AccessLevel.PRIVATE)){
+                return authUser();
+            }//ToDo:RESTRICTED级别问卷的访问控制
+        }
+        return false;
+    }
+
 
 }

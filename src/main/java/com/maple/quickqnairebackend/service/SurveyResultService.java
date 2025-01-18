@@ -35,9 +35,7 @@ public class SurveyResultService {
         // 如果是已登录用户，直接关联 User
         SurveyResult surveyResult = dtoToSurveyResult(surveyResultDTO);
         Long userId = SecurityUtil.getUserId();
-        if(userId!=null){
-            surveyResult.setUser(userService.getUserById(userId));
-        }
+        surveyResult.setUser(userService.getUserById(userId));//匿名问卷的用户均为"Anonymous"
         return surveyResultRepository.save(surveyResult);
     }
 

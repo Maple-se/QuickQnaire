@@ -36,6 +36,7 @@ public class SurveyFilter extends OncePerRequestFilter {
             String encodedSurveyId = extractSurveyIdFromUri(requestUri);
             // 获取当前的 Authentication 对象
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            //仅针对访问路径中有问卷id的URI
             if (encodedSurveyId != null ) {
                 //System.out.println(encodedSurveyId);
                 if(authentication != null){
@@ -45,6 +46,7 @@ public class SurveyFilter extends OncePerRequestFilter {
                     authWithSurveyId.setDetails(encodedSurveyId);  // 存储 Survey 到 SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(authWithSurveyId);
                 }else {
+                    //该匿名用户只在问卷过滤器中有效
                     UsernamePasswordAuthenticationToken anonymousAuthWithSurveyId = new UsernamePasswordAuthenticationToken("Anonymous","password123");
                     anonymousAuthWithSurveyId.setDetails(encodedSurveyId);  // 存储 Survey 到 SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(anonymousAuthWithSurveyId);
@@ -70,7 +72,8 @@ public class SurveyFilter extends OncePerRequestFilter {
                 uri.matches(".*/close-survey/.*") ||
                 uri.matches(".*/delete-question/.*") ||
                 uri.matches(".*/delete-option/.*") ||
-                uri.matches(".*/detail/.*");
+                uri.matches(".*/detail/.*")||
+                uri.matches(".*/submit-survey/.*") ;
     }
 
     /**

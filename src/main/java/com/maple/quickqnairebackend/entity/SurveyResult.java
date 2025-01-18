@@ -39,10 +39,7 @@ public class SurveyResult {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = true)  // user_id 可能为空，对于匿名用户
     @JsonBackReference
-    private User user;  // 关联的 User
-
-    @Column(nullable = true)
-    private Boolean anonymousId = false;  // 匿名用户标识，对于匿名问卷使用
+    private User user;  // 回答该问卷的User
 
     @Setter
     @OneToMany(mappedBy = "surveyResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -57,11 +54,6 @@ public class SurveyResult {
     public void prePersist() {
         if (this.submittedAt == null) {
             this.submittedAt = new Date();
-        }
-
-        // 如果是匿名用户，生成一个匿名ID
-        if (this.user == null) {
-            this.anonymousId = true;  // 使用 UUID 生成唯一的匿名标识
         }
     }
 }
