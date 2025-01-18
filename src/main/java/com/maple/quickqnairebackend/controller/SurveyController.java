@@ -40,7 +40,6 @@ public class SurveyController {
     //创建问卷
     //API测试通过
     //resource: survey permission:User.Auth
-    @PreAuthorize("@surveyPermission.authUser()")
     @PostMapping("/create")
     public ResponseEntity<?> createSurvey(@Validated(SurveyCreateGroup.class) @RequestBody SurveyDTO surveyCreationDTO) {
             SurveySimpleInfoDTO surveySimpleInfoDTO = surveyService.createSurvey(surveyCreationDTO);
@@ -174,7 +173,6 @@ public class SurveyController {
     // 根据用户ID获取所有问卷
     //ToDo:需进一步实现分页查询以及按照问卷状态查询
     //resource: survey permission:User.OWNER
-    @PreAuthorize("@surveyPermission.authUser()")
     @GetMapping("/surveys")
     public ResponseEntity<?> getSurveysByUser() {
        List<SurveySimpleInfoDTO> surveySimpleInfoDTOS = surveyService.getSurveysByUserId();
@@ -183,31 +181,11 @@ public class SurveyController {
 
     //问卷发布
     //resource: survey permission:User.Any and SurveyStatus.ACTIVE
-    //ToDo:目前游客无法浏览问卷，API测试暂未通过
     @PreAuthorize("@surveyPermission.active()")
     @GetMapping("/detail/{encodedSurveyId}")
     public ResponseEntity<?> getSurveyById(@PathVariable String encodedSurveyId) {
         Long surveyId = surveyService.getDecodedSurveyId(encodedSurveyId);
         Survey survey = surveyService.getSurveyById(surveyId);
-//ToDo:在问卷结果提交中实现该逻辑，问卷详情只要是Active用户和游客均可以访问
-            //检查用户是否登录，若未登录，则返回登录页面
-            //Survey.AccessLevel.PRIVATE该访问级别要求已经登录用户填写
-//            if (survey.getAccessLevel() == Survey.AccessLevel.PRIVATE) {
-//                // 通过 SecurityContext 获取用户信息，而不需要再次从请求头中获取
-//                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//                // 判断是否有有效的认证信息
-//                if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
-//                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You need to be logged in to access this survey.");
-//                }
-//                Long userId = Long.parseLong(authentication.getName());  // 从 authentication 中提取 user
-//                if (userId == null) {
-//                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token.");
-//                }
-//            }
-//            //Survey.AccessLevel.RESTRICTED 该访问级别要求特定用户填写
-//            if (survey.getAccessLevel() == Survey.AccessLevel.RESTRICTED) {
-//
-//            }
             SurveyDTO surveyDTO = surveyService.toSurveyDTO(survey);
             surveyDTO.setUserSetDuration(null);
             surveyDTO.setMaxResponses(null);

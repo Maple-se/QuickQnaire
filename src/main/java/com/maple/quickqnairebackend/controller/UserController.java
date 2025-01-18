@@ -1,6 +1,5 @@
 package com.maple.quickqnairebackend.controller;
 
-import com.maple.quickqnairebackend.dto.CustomUserDetails;
 import com.maple.quickqnairebackend.dto.LoginRequest;
 import com.maple.quickqnairebackend.dto.LoginResponse;
 import com.maple.quickqnairebackend.dto.UserDTO;
@@ -10,7 +9,6 @@ import com.maple.quickqnairebackend.util.JwtTokenUtil;
 import com.maple.quickqnairebackend.validation.UserCreateGroup;
 import com.maple.quickqnairebackend.validation.UserUpdateGroup;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +16,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
